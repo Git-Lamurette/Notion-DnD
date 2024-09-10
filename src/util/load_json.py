@@ -1,15 +1,50 @@
+import json
+from dataclasses import dataclass
+from typing import Optional, Union
+from uuid import uuid4
 
-def load_data():
-    self.splash_screen.update_message("Loading data files...")
-    self.raw_data = {}
 
-    for file_name in self.parser_mapping.keys():
-        file_path = os.path.join(self.json_directory, file_name)
-        if os.path.exists(file_path):
-            with open(file_path, "r") as f:
-                data = json.load(f)
-            self.raw_data[file_name] = data
+@dataclass(kw_only=True)
+class _Creature:
+    index: str
+    uid: str = uuid4().hex
+    type: str
+    subtype: Optional[str] = None
+    desc: Optional[str] = None
+    image: Optional[str] = None
+    images: Optional[str] = None
+    url: str
+    name: str
+    size: str
+    alignment: str
+    armor_class: list[dict[str, Union[str, int]]]
+    hit_points: int
+    hit_dice: str
+    hit_points_roll: str
+    speed: dict[str, str]
+    strength: int
+    dexterity: int
+    constitution: int
+    intelligence: int
+    wisdom: int
+    charisma: int
+    proficiency_bonus: int
+    proficiencies: list[dict[str, Union[str, dict[str, str]]]]
+    damage_vulnerabilities: list[str]
+    damage_resistances: list[str]
+    damage_immunities: list[str]
+    condition_immunities: list[dict[str, str]]
+    senses: dict[str, Union[str, int]]
+    languages: str
+    challenge_rating: float
+    xp: int
+    special_abilities: Optional[list[dict[str, str]]] = None
+    legendary_actions: Optional[list[dict[str, str]]] = None
+    actions: Optional[list[dict]] = None
+    reactions: Optional[list[dict]] = None
+    forms: Optional[list[dict[str, str]]] = None
 
-    for file_name, data in self.raw_data.items():
-        parsing_func = self.parser_mapping[file_name]
-        self.parsed_data[file_name] = parsing_func(data)
+
+def load_data(json_dir):
+    with open(f"{json_dir}/5e-SRD-Monsters.json", "r") as f:
+        return json.load(f)
