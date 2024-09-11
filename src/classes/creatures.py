@@ -1,4 +1,5 @@
-import json
+"""Found from someone smarter than me online, idk if I want to keept it or not"""
+
 from dataclasses import dataclass
 from typing import Optional, Union
 from uuid import uuid4
@@ -43,8 +44,3 @@ class _Creature:
     actions: Optional[list[dict]] = None
     reactions: Optional[list[dict]] = None
     forms: Optional[list[dict[str, str]]] = None
-
-
-def load_data(json_dir):
-    with open(f"{json_dir}/5e-SRD-Monsters.json", "r") as f:
-        return json.load(f)
