@@ -1,3 +1,4 @@
+from src.utils.ability_modifier import ability_modifier
 from src.markdown.children_md import (
     add_bulleted_list,
     add_paragraph,
@@ -111,6 +112,20 @@ def build_creature_markdown(creature: object) -> list:
         if x["name"].startswith("Spellcasting"):
             spell_ability = x["desc"]
 
+    # == Actions
+    # ===============
+    actions = []
+    if creature.actions:
+        for x in creature.actions:
+            actions.append(f"{x['name']}: {x["desc"]}")
+
+    # == Legendary Actions
+    # ===============
+    legendary_action = []
+    if creature.legendary_actions:
+        for x in creature.legendary_actions:
+            legendary_action.append(f"{x['name']}: {x["desc"]}")
+
     # =======================================================
     # == End of parse work
     # =======================================================
@@ -127,6 +142,7 @@ def build_creature_markdown(creature: object) -> list:
     # == Adding header at the top
     # ==========
     add_section_heading(markdown_children, f"{creature.name}", level=1)
+    add_divider(markdown_children)
     add_paragraph(
         markdown_children,
         f"{creature.size.capitalize()} {creature.type.capitalize()} , {creature.alignment}",
@@ -154,12 +170,12 @@ def build_creature_markdown(creature: object) -> list:
         "Charisma",
     ]
     stats_table_row = [
-        str(creature.strength),
-        str(creature.dexterity),
-        str(creature.constitution),
-        str(creature.intelligence),
-        str(creature.wisdom),
-        str(creature.charisma),
+        f"{(creature.strength)} ({ability_modifier(creature.strength)})",
+        f"{str(creature.dexterity)} ({ability_modifier(creature.dexterity)})",
+        f"{str(creature.constitution)} ({ability_modifier(creature.constitution)})",
+        f"{str(creature.intelligence)} ({ability_modifier(creature.intelligence)})",
+        f"{str(creature.wisdom)} ({ability_modifier(creature.wisdom)})",
+        f"{str(creature.charisma)} ({ability_modifier(creature.charisma)})",
     ]
     add_table(markdown_children, stats_table_headers, [stats_table_row])
     add_divider(markdown_children)
@@ -175,17 +191,26 @@ def build_creature_markdown(creature: object) -> list:
     # == Resistances
     # ==========
     if parsed_dam_res:
-        add_paragraph(markdown_children, f"Damage resitances: {parsed_dam_res}")
+        add_paragraph(markdown_children, f"Damage Resistances: {parsed_dam_res}")
 
+    # == Vulnerabilities
+    # ==========
     if parsed_dam_vul:
         add_paragraph(markdown_children, f"Damage Vulnerabilities: {parsed_dam_res}")
+
+    # == Immunities
+    # ==========
+    if parsed_dam_imun:
+        add_paragraph(markdown_children, f"Damage Immunity: {parsed_dam_imun}")
+
+    if parsed_con_imun:
+        add_paragraph(markdown_children, f"Condition Immunity: {parsed_con_imun}")
 
     # == Language and Senses
     # ==========
     if parsed_senses:
         add_paragraph(markdown_children, f"Senses: {parsed_senses}")
     add_paragraph(markdown_children, f"Language(s) : {creature.languages}")
-    add_divider(markdown_children)
 
     # == CR (XP) -- Prof Bonus
     # ==========
@@ -195,19 +220,47 @@ def build_creature_markdown(creature: object) -> list:
     )
     add_divider(markdown_children)
 
-    # == Spellcasting
-    # ==========
-    if spell_ability:
-        add_section_heading(markdown_children, "Spellcasting", level=2)
-        add_paragraph(markdown_children, spell_ability)
-
     # == Special Abilitites
     # ==========
     if special_ability:
         add_section_heading(markdown_children, "Abilitites", level=2)
+        add_divider(markdown_children)
         for x in special_ability:
             add_paragraph(markdown_children, f"{x}")
+        add_divider(markdown_children)
 
-    # ==
+    # == Spellcasting
+    # ==========
+    if spell_ability:
+        add_section_heading(markdown_children, "Spellcasting", level=2)
+        add_divider(markdown_children)
+        add_paragraph(markdown_children, spell_ability)
+        add_divider(markdown_children)
+
+    # == Actions
+    # ==========
+    if actions:
+        add_section_heading(markdown_children, "Actions", level=2)
+        add_divider(markdown_children)
+        for x in actions:
+            add_paragraph(markdown_children, f"{x}")
+        add_divider(markdown_children)
+
+    # == Legendary Actions
+    # ==========
+    if legendary_action:
+        add_section_heading(markdown_children, "Legendary Actions", level=2)
+        add_divider(markdown_children)
+        for x in legendary_action:
+            add_paragraph(markdown_children, f"{x}")
+        add_divider(markdown_children)
+
+    # == Description
+    # ==========
+    if creature.desc:
+        add_section_heading(markdown_children, "Description", level=2)
+        add_divider(markdown_children)
+        add_paragraph(markdown_children, f"{creature.desc}")
+        add_divider(markdown_children)
 
     return markdown_children
