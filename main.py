@@ -31,6 +31,7 @@ This wil build all databases
 from notion_client import Client
 from src.utils.logger import configure_logging
 from src.api.creature import creature_page, creature_db
+from src.api.equipment import equipment_page, equipment_db
 import argparse
 
 
@@ -79,8 +80,15 @@ def main(args):
         )
 
     if args.build.lower() in {"equipment", "all"}:
-        print("Equipment is coming soon!")
-        # Additional code specific to 2 or 3
+        equipment_db_id = equipment_db(logger, notion, args.database_id)
+        equipment_page(
+            logger,
+            notion,
+            DATA_DIRECTORY,
+            equipment_db_id,
+            args.start_range,
+            args.end_range,
+        )
 
 
 if __name__ == "__main__":

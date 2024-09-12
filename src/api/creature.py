@@ -4,6 +4,7 @@ from notion_client.errors import APIResponseError
 from src.utils.load_json import load_data
 import sys
 from typing import TYPE_CHECKING, Union
+from time import sleep
 
 if TYPE_CHECKING:
     import logging
@@ -78,6 +79,7 @@ def creature_page(
                 children=children,
             )
             logger.info(f"Page created for {monster.name} with ID: {response['id']}")
+            sleep(0.5)
 
         except APIResponseError as e:
             logger.error(f"Response status: {e.status}")
