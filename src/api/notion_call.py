@@ -15,6 +15,17 @@ def create_page(
     markdown_properties: list,
     children_properties: list,
 ) -> None:
+    """This function creates a page in Notion. It is used to create the pages for the creatures and equipment.
+
+    Args:
+
+        logger (logging.Logger): Logging object
+        notion (client): Notion client object
+        database_id (str): Database ID
+        markdown_properties (list): List of properties for the page
+        children_properties (list): List of children properties for the page
+
+    """
 
     try:
         # == Sending response to notion API
@@ -39,6 +50,17 @@ def create_database(
     database_name: list,
     database_properties: list,
 ) -> None:
+    """This function creates a database in Notion. It is used to create the database for the creatures and equipment.
+
+    Args:
+
+        logger (logging.Logger): Logging object
+        notion (client): Notion client object
+        database_id (str): Database ID
+        database_name (list): Name of the database
+        database_properties (list): Properties for the database
+
+    """
 
     try:
         # == Sending response to notion API
