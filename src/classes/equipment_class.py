@@ -36,5 +36,39 @@ class _equipment:
 
     def get_damage_dice(self) -> str:
         if self.damage:
-            return self.damage["damage_dice"]
-        return "No Damage Info"
+            return self.damage.get("damage_dice", "")
+        return "0"
+
+    def get_two_handed_damage(self) -> str:
+        if self.two_handed_damage:
+            return self.two_handed_damage.get("damage_dice", "")
+        return ""
+
+    def get_cost(self) -> str:
+        return f"{self.cost.get('quantity', '')} {self.cost.get('unit', '')}"
+
+    def get_range(self) -> str:
+        return "\n".join(
+            f"{key.capitalize()} - {value}"
+            for key, value in self.range.items()
+            if key in ["normal", "long"]
+        )
+
+    def get_range_thrown(self) -> str:
+        if self.throw_range:
+            return " - ".join(
+                f"{key.capitalize()} - {value}"
+                for key, value in self.throw_range.items()
+                if key in ["normal", "long"]
+            )
+        return ""
+
+    def get_damage_type(self) -> str:
+        if self.damage:
+            return (
+                self.damage.get("damage_type", {}).get("index", "Unknown").capitalize()
+            )
+        return "None"
+
+    def get_properties(self) -> List[str]:
+        return [prop["name"].capitalize() for prop in self.properties]

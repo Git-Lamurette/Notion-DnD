@@ -1,11 +1,8 @@
 from notion_client.errors import APIResponseError
 import sys
 from time import sleep
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    import logging
-    from notion_client import client
+import logging
+from notion_client import client
 
 
 def create_page(

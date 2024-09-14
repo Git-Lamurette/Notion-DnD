@@ -38,7 +38,6 @@ def creature_page(
 
     # == Iterates through the specified range of the monster JSON
     for index in range(start, end):
-
         x = creature_data[index]
 
         # == Makes the creature as a data class
@@ -58,6 +57,7 @@ def creature_page(
                     }
                 ]
             },
+            "URL": {"url": f"https://www.dndbeyond.com/monsters/{monster.index}"},
             "Size": {"select": {"name": monster.size.capitalize()}},
             "Type": {"select": {"name": monster.type.capitalize()}},
             "CR": {"number": monster.challenge_rating},
@@ -79,7 +79,6 @@ def creature_page(
             logger, notion, database_id, markdown_properties, children_properties
         )
 
-        logger.info(f"Page created for {monster.name}")
         sleep(0.5)
 
 
@@ -100,6 +99,7 @@ def creature_db(logger: "logging.Logger", notion: "client", database_id: str) ->
     # == Building markdown database properties
     database_properties = {
         "Name": {"title": {}},
+        "URL": {"url": {}},
         "Size": {
             "select": {
                 "options": [
@@ -148,4 +148,6 @@ def creature_db(logger: "logging.Logger", notion: "client", database_id: str) ->
         },
     }
 
-    create_database(logger, notion, database_id, database_name, database_properties)
+    return create_database(
+        logger, notion, database_id, database_name, database_properties
+    )

@@ -31,7 +31,9 @@ This wil build all databases
 from notion_client import Client
 from src.utils.logger import configure_logging
 from src.api.creature import creature_page, creature_db
-from src.api.equipment import equipment_page, equipment_db
+from src.api.weapons import weapons_page, weapons_db
+from src.api.armors import armor_page, armor_db
+
 import argparse
 
 
@@ -79,9 +81,22 @@ def main(args):
             args.end_range,
         )
 
-    if args.build.lower() in {"equipment", "all"}:
-        equipment_db_id = equipment_db(logger, notion, args.database_id)
-        equipment_page(
+    if args.build.lower() in {"weapons", "all"}:
+        equipment_db_id = weapons_db(logger, notion, args.database_id)
+
+        weapons_page(
+            logger,
+            notion,
+            DATA_DIRECTORY,
+            equipment_db_id,
+            args.start_range,
+            args.end_range,
+        )
+
+    if args.build.lower() in {"armor", "all"}:
+        equipment_db_id = armor_db(logger, notion, args.database_id)
+
+        armor_page(
             logger,
             notion,
             DATA_DIRECTORY,
