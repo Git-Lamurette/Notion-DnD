@@ -1,5 +1,5 @@
-from src.classes.equipment_class import _equipment
-from src.markdown.armor_md import build_armor_markdown
+from src.classes.item_class import _items
+from src.markdown.items_md import build_items_markdown
 from src.utils.load_json import load_data
 from src.api.notion_call import create_page, create_database
 from typing import TYPE_CHECKING, Union
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from notion_client import client
 
 
-def armor_page(
+def items_page(
     logger: "logging.Logger",
     notion: "client",
     data_directory: str,
@@ -19,7 +19,7 @@ def armor_page(
     end: Union[None, int],
 ) -> None:
     """This generates the api calls needed for Notion. This parses the JSON and build the markdown body for the API call.
-    It iterates through each equipment in the json depending on params.
+    It iterates through each items in the json depending on params.
 
     Args:
         logger (logging.Logger): Logging object
@@ -29,45 +29,45 @@ def armor_page(
         start (int): If you want to only capture a range specify the start
         end (Union[None, int]): If you want to only capture a range specify the end
     """
-    # == Get equipment Data
-    equipment_data = load_data(logger, data_directory, "5e-SRD-Equipment.json")
+    # == Get items Data
+    items_data = load_data(logger, data_directory, "5e-SRD-items.json")
 
-    # == Apply range to equipment data
-    if end is None or end > len(equipment_data):
-        end = len(equipment_data)
+    # == Apply range to items data
+    if end is None or end > len(items_data):
+        end = len(items_data)
 
-    # == Iterates through the specified range of the equipment JSON
+    # == Iterates through the specified range of the items JSON
     for index in range(start, end):
-        x = equipment_data[index]
+        x = items_data[index]
 
-        # == Makes the equipment as a data class
-        equipment = _equipment(**x)
+        # == Makes the items as a data class
+        items = _items(**x)
 
-        if equipment.equipment_category["index"] == "armor":
+        if items.items_category["index"] == "items":
             logger.info(
-                f"Building Markdown for equipment -- {equipment.name} -- Index -- {index} --"
+                f"Building Markdown for items -- {items.name} -- Index -- {index} --"
             )
 
-            # == Building markdown properties from _equipment class
+            # == Building markdown properties from _items class
             markdown_properties = {
-                "Name": {"title": [{"text": {"content": equipment.name}}]},
+                "Name": {"title": [{"text": {"content": items.name}}]},
                 "URL": {
-                    "url": f"https://www.dndbeyond.com/equipment/{equipment.index.strip("-armor")}"
+                    "url": f"https://www.dndbeyond.com/items/{items.index.strip("-items")}"
                 },
-                "Category": {"select": {"name": equipment.equipment_category["name"]}},
-                "Cost": {"rich_text": [{"text": {"content": equipment.get_cost()}}]},
-                "Weight": {"rich_text": [{"text": {"content": f"{equipment.weight} lbs"}}]},
-                "Type": {"multi_select": [{"name": equipment.armor_category}]},
-                "Armor Class": {"rich_text": [{"text": {"content": equipment.get_armor_class()}}]},
-                "Strength Requirement": {"number": equipment.get_strength_requirement()},
-                "Stealth Disadvantage": {"checkbox": equipment.stealth_disadvantage},
+                "Category": {"select": {"name": items.items_category["name"]}},
+                "Cost": {"rich_text": [{"text": {"content": items.get_cost()}}]},
+                "Weight": {"rich_text": [{"text": {"content": f"{items.weight} lbs"}}]},
+                "Type": {"multi_select": [{"name": items.items_category}]},
+                "items Class": {"rich_text": [{"text": {"content": items.get_items_class()}}]},
+                "Strength Requirement": {"number": items.get_strength_requirement()},
+                "Stealth Disadvantage": {"checkbox": items.stealth_disadvantage},
             }
 
             # == Ensure children_properties list is empty
             children_properties = []
 
-            # == Building markdown for equipment
-            children_properties = build_armor_markdown(equipment)
+            # == Building markdown for items
+            children_properties = build_items_markdown(items)
 
             # == Sending api call
             # ==========
@@ -78,7 +78,7 @@ def armor_page(
             sleep(0.5)
 
 
-def armor_db(logger: "logging.Logger", notion: "client", database_id: str) -> str:
+def items_db(logger: "logging.Logger", notion: "client", database_id: str) -> str:
     """This generates the api calls needed for Notion. This just builds the empty database page with the required options.
 
     Args:
@@ -91,16 +91,16 @@ def armor_db(logger: "logging.Logger", notion: "client", database_id: str) -> st
     """
 
     # == Database Name
-    database_name = "Armor"
+    database_name = "Items"
 
     # == Building markdown database properties
-    database_armor_properties = {
+    database_items_properties = {
         "Name": {"title": {}},
         "URL": {"url": {}},
         "Category": {
             "select": {
                 "options": [
-                    {"name": "Armor", "color": "green"},
+                    {"name": "items", "color": "green"},
                 ]
             }
         },
@@ -109,17 +109,17 @@ def armor_db(logger: "logging.Logger", notion: "client", database_id: str) -> st
         "Type": {
             "multi_select": {
                 "options": [
-                    {"name": "Light Armor", "color": "gray"},
-                    {"name": "Medium Armor", "color": "green"},
-                    {"name": "Heavy Armor", "color": "yellow"},
+                    {"name": "Light items", "color": "gray"},
+                    {"name": "Medium items", "color": "green"},
+                    {"name": "Heavy items", "color": "yellow"},
                     {"name": "Shield", "color": "blue"},
                 ]
             }
         },
-        "Armor Class": {"rich_text": {}},
+        "items Class": {"rich_text": {}},
         "Strength Requirement": {"number": {}},
         "Stealth Disadvantage": {"checkbox": {}},
     }
     return create_database(
-        logger, notion, database_id, database_name, database_armor_properties
+        logger, notion, database_id, database_name, database_items_properties
     )

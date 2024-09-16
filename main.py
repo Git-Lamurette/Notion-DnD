@@ -34,6 +34,8 @@ from src.utils.logger import configure_logging
 from src.api.creature import creature_page, creature_db
 from src.api.weapons import weapons_page, weapons_db
 from src.api.armors import armor_page, armor_db
+from src.api.items import items_page, items_db
+from src.utils.get_keys import get_keys
 
 import argparse
 
@@ -62,6 +64,8 @@ def main(args):
     logger.info("==")
     logger.info("=========================================================")
 
+    #get_keys(logger, DATA_DIRECTORY, "5e-SRD-Equipment.json")
+
     # == Using your auth key we access your Notion account
     notion = Client(auth=args.auth_key)
 
@@ -83,25 +87,37 @@ def main(args):
         )
 
     if args.build.lower() in {"weapons", "all"}:
-        equipment_db_id = weapons_db(logger, notion, args.database_id)
+        weapons_db_id = weapons_db(logger, notion, args.database_id)
 
         weapons_page(
             logger,
             notion,
             DATA_DIRECTORY,
-            equipment_db_id,
+            weapons_db_id,
             args.start_range,
             args.end_range,
         )
 
     if args.build.lower() in {"armor", "all"}:
-        equipment_db_id = armor_db(logger, notion, args.database_id)
+        armors_db_id = armor_db(logger, notion, args.database_id)
         
         armor_page(
             logger,
             notion,
             DATA_DIRECTORY,
-            equipment_db_id,
+            armors_db_id,
+            args.start_range,
+            args.end_range,
+        )
+    
+    if args.build.lower() in {"items", "all"}:
+        items_db_id = items_db(logger, notion, args.database_id)
+        
+        items_page(
+            logger,
+            notion,
+            DATA_DIRECTORY,
+            items_db_id,
             args.start_range,
             args.end_range,
         )

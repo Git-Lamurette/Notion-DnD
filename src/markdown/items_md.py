@@ -11,7 +11,7 @@ from src.markdown.children_md import (
 )
 
 
-def build_armor_markdown(equipment: object) -> list:
+def build_items_markdown(equipment: object) -> list:
     # == This is all of the building of the api call for
     # == the markdown body
     # =======================================================
@@ -26,7 +26,7 @@ def build_armor_markdown(equipment: object) -> list:
     add_divider(markdown_children)
     add_paragraph(
         markdown_children,
-        f"Type: {equipment.armor_category}  Cost: {equipment.cost['quantity']} {equipment.cost['unit']}  Weight: {equipment.weight} lbs",
+        f"Type: {equipment.items_category}  Cost: {equipment.cost['quantity']} {equipment.cost['unit']}  Weight: {equipment.weight} lbs",
     )
     add_divider(markdown_children)
     '''
@@ -37,11 +37,11 @@ def build_armor_markdown(equipment: object) -> list:
     '''
     # == Attributes
     # ==========
-    stats_table_headers = ["Name", "Cost", "Armor Class", "Strength", "Stealth", "Weight"]
+    stats_table_headers = ["Name", "Cost", "items Class", "Strength", "Stealth", "Weight"]
     stats_table_row = [
         f"{equipment.name}",
         f"{equipment.cost['quantity']} {equipment.cost['unit']}",
-        f"{equipment.get_armor_class()}",
+        f"{equipment.get_items_class()}",
         f"{' -- ' if equipment.get_strength_requirement() == 0 else equipment.get_strength_requirement()}",
         f"{' -- ' if not equipment.stealth_disadvantage else "Disadvantage"}",
         f"{equipment.weight} lbs",
