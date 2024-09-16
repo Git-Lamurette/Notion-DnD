@@ -50,31 +50,17 @@ def armor_page(
 
             # == Building markdown properties from _equipment class
             markdown_properties = {
-                "Name": {"title": [{"text": {"content": "Example Armor"}}]},
+                "Name": {"title": [{"text": {"content": equipment.name}}]},
                 "URL": {
                     "url": f"https://www.dndbeyond.com/equipment/{equipment.index}"
                 },
-                "Category": {"select": {"name": "Armor"}},
-                "Cost": {"rich_text": [{"text": {"content": "50 gp"}}]},
-                "Weight": {"number": 15},
-                "Description": {
-                    "rich_text": [
-                        {
-                            "text": {
-                                "content": "This is an example description of the armor."
-                            }
-                        }
-                    ]
-                },
-                "Type": {"multi_select": [{"name": "Medium Armor"}]},
-                "Armor Class": {"number": 15},
-                "Strength Requirement": {"number": 13},
-                "Stealth Disadvantage": {"checkbox": False},
-                "Special": {
-                    "rich_text": [
-                        {"text": {"content": "This armor has a special ability."}}
-                    ]
-                },
+                "Category": {"select": {"name": equipment.equipment_category["name"]}},
+                "Cost": {"rich_text": [{"text": {"content": equipment.get_cost()}}]},
+                "Weight": {"rich_text": [{"text": {"content": f"{equipment.weight} lbs"}}]},
+                "Type": {"multi_select": [{"name": equipment.armor_category}]},
+                "Armor Class": {"rich_text": [{"text": {"content": equipment.get_armor_class()}}]},
+                "Strength Requirement": {"number": equipment.get_strength_requirement()},
+                "Stealth Disadvantage": {"checkbox": equipment.stealth_disadvantage},
             }
 
             # == Ensure children_properties list is empty
@@ -105,7 +91,7 @@ def armor_db(logger: "logging.Logger", notion: "client", database_id: str) -> st
     """
 
     # == Database Name
-    database_name = "armor"
+    database_name = "Armor"
 
     # == Building markdown database properties
     database_armor_properties = {
@@ -119,8 +105,7 @@ def armor_db(logger: "logging.Logger", notion: "client", database_id: str) -> st
             }
         },
         "Cost": {"rich_text": {}},
-        "Weight": {"number": {}},
-        "Description": {"rich_text": {}},
+        "Weight": {"rich_text": {}},
         "Type": {
             "multi_select": {
                 "options": [
@@ -131,10 +116,9 @@ def armor_db(logger: "logging.Logger", notion: "client", database_id: str) -> st
                 ]
             }
         },
-        "Armor Class": {"number": {}},
+        "Armor Class": {"rich_text": {}},
         "Strength Requirement": {"number": {}},
         "Stealth Disadvantage": {"checkbox": {}},
-        "Special": {"rich_text": {}},
     }
     return create_database(
         logger, notion, database_id, database_name, database_armor_properties

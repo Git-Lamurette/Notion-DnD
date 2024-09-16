@@ -17,6 +17,7 @@ SUPPORTED DATABASES:
 
     All
     Creature
+    Weapons
 
 EXAMLPES:
 
@@ -95,7 +96,7 @@ def main(args):
 
     if args.build.lower() in {"armor", "all"}:
         equipment_db_id = armor_db(logger, notion, args.database_id)
-
+        
         armor_page(
             logger,
             notion,
@@ -104,7 +105,6 @@ def main(args):
             args.start_range,
             args.end_range,
         )
-
 
 if __name__ == "__main__":
     # Argument parsing block

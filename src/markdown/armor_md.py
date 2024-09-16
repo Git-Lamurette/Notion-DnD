@@ -26,25 +26,25 @@ def build_armor_markdown(equipment: object) -> list:
     add_divider(markdown_children)
     add_paragraph(
         markdown_children,
-        f"Type: {equipment.category_range}  Cost: {equipment.cost['quantity']} {equipment.cost['unit']}  Weight: {equipment.weight} lbs",
+        f"Type: {equipment.armor_category}  Cost: {equipment.cost['quantity']} {equipment.cost['unit']}  Weight: {equipment.weight} lbs",
     )
     add_divider(markdown_children)
-
+    '''
     if equipment.special:
         for special in equipment.special:
             add_paragraph(markdown_children, special)
         add_divider(markdown_children)
-
+    '''
     # == Attributes
     # ==========
-    stats_table_headers = ["Name", "Cost", "Damage", "Weight", "Properties", "Range"]
+    stats_table_headers = ["Name", "Cost", "Armor Class", "Strength", "Stealth", "Weight"]
     stats_table_row = [
         f"{equipment.name}",
         f"{equipment.cost['quantity']} {equipment.cost['unit']}",
-        f"{equipment.get_damage_dice()}",
+        f"{equipment.get_armor_class()}",
+        f"{' -- ' if equipment.get_strength_requirement() == 0 else equipment.get_strength_requirement()}",
+        f"{' -- ' if equipment.stealth_disadvantage == False else "Disadvantage"}",
         f"{equipment.weight} lbs",
-        f"{" - ".join(prop for prop in equipment.get_properties())}",
-        f"{equipment.get_range()}",
     ]
     add_table(markdown_children, stats_table_headers, [stats_table_row])
     add_divider(markdown_children)
