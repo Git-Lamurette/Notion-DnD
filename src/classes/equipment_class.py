@@ -72,20 +72,34 @@ class _equipment:
 
     def get_properties(self) -> List[str]:
         return [prop["name"].capitalize() for prop in self.properties]
-    
+
     def get_armor_class(self) -> str:
-        if self.armor_class['dex_bonus'] == True:
-            max_bonus = self.armor_class.get('max_bonus', None)
+        if self.armor_class["dex_bonus"]:
+            max_bonus = self.armor_class.get("max_bonus", None)
             if max_bonus:
                 return f"{self.armor_class.get('base', 0)} + Dex Modifier (Max {self.armor_class['max_bonus']})"
             else:
                 return f"{self.armor_class.get('base', 0)} + Dex Modifier"
         if self.armor_class:
             return f"{self.armor_class.get("base", 0)}"
-        
+
         return "0"
-    
+
     def get_strength_requirement(self) -> int:
         if self.str_minimum:
             return self.str_minimum
         return 0
+
+    def get_equipment_category(self) -> str:
+        if self.equipment_category["name"] == "Tools":
+            return self.tool_category
+        if self.equipment_category["name"] == "Mounts and Vehicles":
+            return self.vehicle_category.replace(",", " -")
+        if self.equipment_category["name"] == "Adventuring Gear":
+            return self.gear_category["name"]
+        return " -- "
+
+    def get_weight(self) -> int:
+        if self.weight:
+            return f"{self.weight} lbs"
+        return " -- "

@@ -71,21 +71,20 @@ def add_numbered_list(markdown_children: list, items: list) -> None:
     markdown_children.extend(list_items)
 
 
-def add_table(markdown_children: list, headers: list, rows: list) -> None:
+def add_table(markdown_children: list, headers: list, rows: list = None) -> None:
     """Add a table to your markdown
 
     Example:
-        Header = [ 1, 2, 3, 4]
+        Headers = ["Item 1", "Item 2", "Item 3"]
         Rows = [
-        [1, 2, 3, 4],
-        [1, 2, 3, 4],
-        [1, 2, 3, 4]
+            ["Data 1", "Data 2", "Data 3"],
+            ["Data 4", "Data 5", "Data 6"],
         ]
 
     Args:
         markdown_children (list): Your markdown list that contains all elements so far
         headers (list): The headers for your table
-        rows (list): The rows for your table
+        rows (list, optional): The rows for your table. Defaults to None.
     """
     table_width = len(headers)
 
@@ -100,17 +99,21 @@ def add_table(markdown_children: list, headers: list, rows: list) -> None:
         },
     }
 
-    # Construct data rows
-    data_rows = [
-        {
-            "object": "block",
-            "type": "table_row",
-            "table_row": {
-                "cells": [[{"type": "text", "text": {"content": cell}}] for cell in row]
-            },
-        }
-        for row in rows
-    ]
+    # Construct data rows if provided
+    data_rows = []
+    if rows:
+        data_rows = [
+            {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                    "cells": [
+                        [{"type": "text", "text": {"content": cell}}] for cell in row
+                    ]
+                },
+            }
+            for row in rows
+        ]
 
     # Construct the full table block
     table = {

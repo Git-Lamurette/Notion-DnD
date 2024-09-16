@@ -64,7 +64,7 @@ def main(args):
     logger.info("==")
     logger.info("=========================================================")
 
-    #get_keys(logger, DATA_DIRECTORY, "5e-SRD-Equipment.json")
+    # get_keys(logger, DATA_DIRECTORY, "5e-SRD-Equipment.json")
 
     # == Using your auth key we access your Notion account
     notion = Client(auth=args.auth_key)
@@ -98,9 +98,9 @@ def main(args):
             args.end_range,
         )
 
-    if args.build.lower() in {"armor", "all"}:
+    if args.build.lower() in {"armors", "all"}:
         armors_db_id = armor_db(logger, notion, args.database_id)
-        
+
         armor_page(
             logger,
             notion,
@@ -109,10 +109,10 @@ def main(args):
             args.start_range,
             args.end_range,
         )
-    
+
     if args.build.lower() in {"items", "all"}:
         items_db_id = items_db(logger, notion, args.database_id)
-        
+        # items_db_id = ""
         items_page(
             logger,
             notion,
@@ -121,6 +121,7 @@ def main(args):
             args.start_range,
             args.end_range,
         )
+
 
 if __name__ == "__main__":
     # Argument parsing block

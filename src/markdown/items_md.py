@@ -1,4 +1,6 @@
-from src.utils.ability_modifier import ability_modifier
+from notion_client import client
+from src.api.notion_call import search_notion_page, add_relation
+import logging
 from src.markdown.children_md import (
     add_bulleted_list,
     add_paragraph,
@@ -11,7 +13,9 @@ from src.markdown.children_md import (
 )
 
 
-def build_items_markdown(equipment: object) -> list:
+def build_items_markdown(
+    equipment: object, notion: client, logger: logging.Logger, database_id: str
+) -> list:
     # == This is all of the building of the api call for
     # == the markdown body
     # =======================================================
@@ -19,34 +23,36 @@ def build_items_markdown(equipment: object) -> list:
     # == Initializing the markdown children list
     # ==========
     markdown_children = []
+    relations_to_create = []
 
     # == Adding header at the top
     # ==========
     add_section_heading(markdown_children, f"{equipment.name}", level=1)
-    add_divider(markdown_children)
-    add_paragraph(
-        markdown_children,
-        f"Type: {equipment.items_category}  Cost: {equipment.cost['quantity']} {equipment.cost['unit']}  Weight: {equipment.weight} lbs",
-    )
-    add_divider(markdown_children)
-    '''
-    if equipment.special:
-        for special in equipment.special:
-            add_paragraph(markdown_children, special)
-        add_divider(markdown_children)
-    '''
-    # == Attributes
-    # ==========
-    stats_table_headers = ["Name", "Cost", "items Class", "Strength", "Stealth", "Weight"]
-    stats_table_row = [
-        f"{equipment.name}",
-        f"{equipment.cost['quantity']} {equipment.cost['unit']}",
-        f"{equipment.get_items_class()}",
-        f"{' -- ' if equipment.get_strength_requirement() == 0 else equipment.get_strength_requirement()}",
-        f"{' -- ' if not equipment.stealth_disadvantage else "Disadvantage"}",
-        f"{equipment.weight} lbs",
+    headers = [
+        f"Type: {equipment.equipment_category['name']}",
+        f"Cost: {equipment.cost['quantity']} {equipment.cost['unit']}",
+        f"Weight: {equipment.get_weight()}",
     ]
-    add_table(markdown_children, stats_table_headers, [stats_table_row])
-    add_divider(markdown_children)
+    add_table(markdown_children, headers)
 
-    return markdown_children
+    if equipment.desc:
+        add_divider(markdown_children)
+        for desc in equipment.desc:
+            add_paragraph(markdown_children, desc)
+
+    if equipment.contents:
+        add_divider(markdown_children)
+        for content in equipment.contents:
+            add_paragraph(
+                markdown_children, f"{content["quantity"]} x {content["item"]["name"]}"
+            )
+
+            # == Experimental
+            item_name = content["item"]["name"]
+            found_page_id = search_notion_page(notion, item_name, database_id)
+            if found_page_id:
+                # Store the relation information to create later
+                print(f"Found page id {found_page_id} for {item_name}")
+                relations_to_create.append((found_page_id, "Contained In", "Contains"))
+
+    return markdown_children, relations_to_create

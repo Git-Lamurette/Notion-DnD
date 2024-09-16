@@ -23,21 +23,25 @@ def build_armor_markdown(equipment: object) -> list:
     # == Adding header at the top
     # ==========
     add_section_heading(markdown_children, f"{equipment.name}", level=1)
+
+    headers = [
+        f"Type: {equipment.armor_category}",
+        f"Cost: {equipment.cost['quantity']} {equipment.cost['unit']}",
+        f"Weight: {equipment.get_weight()}",
+    ]
+    add_table(markdown_children, headers)
     add_divider(markdown_children)
-    add_paragraph(
-        markdown_children,
-        f"Type: {equipment.armor_category}  Cost: {equipment.cost['quantity']} {equipment.cost['unit']}  Weight: {equipment.weight} lbs",
-    )
-    add_divider(markdown_children)
-    '''
-    if equipment.special:
-        for special in equipment.special:
-            add_paragraph(markdown_children, special)
-        add_divider(markdown_children)
-    '''
+
     # == Attributes
     # ==========
-    stats_table_headers = ["Name", "Cost", "Armor Class", "Strength", "Stealth", "Weight"]
+    stats_table_headers = [
+        "Name",
+        "Cost",
+        "Armor Class",
+        "Strength",
+        "Stealth",
+        "Weight",
+    ]
     stats_table_row = [
         f"{equipment.name}",
         f"{equipment.cost['quantity']} {equipment.cost['unit']}",
@@ -47,6 +51,5 @@ def build_armor_markdown(equipment: object) -> list:
         f"{equipment.weight} lbs",
     ]
     add_table(markdown_children, stats_table_headers, [stats_table_row])
-    add_divider(markdown_children)
 
     return markdown_children

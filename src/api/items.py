@@ -1,4 +1,4 @@
-from src.classes.item_class import _items
+from src.classes.equipment_class import _equipment
 from src.markdown.items_md import build_items_markdown
 from src.utils.load_json import load_data
 from src.api.notion_call import create_page, create_database
@@ -30,7 +30,7 @@ def items_page(
         end (Union[None, int]): If you want to only capture a range specify the end
     """
     # == Get items Data
-    items_data = load_data(logger, data_directory, "5e-SRD-items.json")
+    items_data = load_data(logger, data_directory, "5e-SRD-Equipment.json")
 
     # == Apply range to items data
     if end is None or end > len(items_data):
@@ -41,40 +41,72 @@ def items_page(
         x = items_data[index]
 
         # == Makes the items as a data class
-        items = _items(**x)
+        items = _equipment(**x)
 
-        if items.items_category["index"] == "items":
+        if (
+            items.equipment_category["index"] != "armor"
+            and items.equipment_category["index"] != "weapon"
+        ):
             logger.info(
                 f"Building Markdown for items -- {items.name} -- Index -- {index} --"
             )
 
             # == Building markdown properties from _items class
             markdown_properties = {
-                "Name": {"title": [{"text": {"content": items.name}}]},
-                "URL": {
-                    "url": f"https://www.dndbeyond.com/items/{items.index.strip("-items")}"
+                "Name": {
+                    "title": [
+                        {
+                            "type": "text",
+                            "text": {"content": items.name},
+                        }
+                    ]
                 },
-                "Category": {"select": {"name": items.items_category["name"]}},
-                "Cost": {"rich_text": [{"text": {"content": items.get_cost()}}]},
-                "Weight": {"rich_text": [{"text": {"content": f"{items.weight} lbs"}}]},
-                "Type": {"multi_select": [{"name": items.items_category}]},
-                "items Class": {"rich_text": [{"text": {"content": items.get_items_class()}}]},
-                "Strength Requirement": {"number": items.get_strength_requirement()},
-                "Stealth Disadvantage": {"checkbox": items.stealth_disadvantage},
+                "URL": {
+                    "url": f"https://www.dndbeyond.com/equipment/{items.index.split("-")[0].strip()}"
+                },
+                "Category": {
+                    "select": {
+                        "name": items.equipment_category.get("name", "Unknown Category")
+                    }
+                },
+                "Gear Category": {
+                    "select": {"name": f"{items.get_equipment_category()}"}
+                },
+                "Cost": {
+                    "rich_text": [
+                        {
+                            "type": "text",
+                            "text": {
+                                "content": f"{items.cost.get('quantity', 'Unknown')} {items.cost.get('unit', 'Unknown Unit')}"
+                            },
+                        }
+                    ]
+                },
+                "Weight": {"number": items.weight},
             }
 
             # == Ensure children_properties list is empty
             children_properties = []
 
             # == Building markdown for items
-            children_properties = build_items_markdown(items)
+            children_properties, relations_to_create = build_items_markdown(
+                items,
+                notion,
+                logger,
+                database_id,
+            )
 
             # == Sending api call
             # ==========
             create_page(
-                logger, notion, database_id, markdown_properties, children_properties
+                logger,
+                notion,
+                database_id,
+                markdown_properties,
+                children_properties,
+                relations_to_create,
             )
-            
+
             sleep(0.5)
 
 
@@ -100,25 +132,33 @@ def items_db(logger: "logging.Logger", notion: "client", database_id: str) -> st
         "Category": {
             "select": {
                 "options": [
-                    {"name": "items", "color": "green"},
+                    {"name": "Adventuring Gear", "color": "gray"},
+                    {"name": "Tools", "color": "blue"},
+                    {"name": "Mounts and Vehicles", "color": "red"},
+                    {"name": "Food and Drink", "color": "pink"},
+                    {"name": "Trade Goods", "color": "purple"},
+                    {"name": "Special Gear", "color": "brown"},
+                ]
+            }
+        },
+        "Gear Category": {
+            "select": {
+                "options": [
+                    {"name": "Standard Gear", "color": "gray"},
+                    {"name": "Kit", "color": "blue"},
+                    {"name": "Container", "color": "green"},
+                    {"name": "Tool", "color": "yellow"},
+                    {"name": "Mount", "color": "red"},
+                    {"name": "Vehicle", "color": "purple"},
+                    {"name": "Food", "color": "pink"},
+                    {"name": "Drink", "color": "brown"},
+                    {"name": "Trade Good", "color": "orange"},
+                    {"name": "Special", "color": "blue"},
                 ]
             }
         },
         "Cost": {"rich_text": {}},
-        "Weight": {"rich_text": {}},
-        "Type": {
-            "multi_select": {
-                "options": [
-                    {"name": "Light items", "color": "gray"},
-                    {"name": "Medium items", "color": "green"},
-                    {"name": "Heavy items", "color": "yellow"},
-                    {"name": "Shield", "color": "blue"},
-                ]
-            }
-        },
-        "items Class": {"rich_text": {}},
-        "Strength Requirement": {"number": {}},
-        "Stealth Disadvantage": {"checkbox": {}},
+        "Weight": {"number": {}},
     }
     return create_database(
         logger, notion, database_id, database_name, database_items_properties

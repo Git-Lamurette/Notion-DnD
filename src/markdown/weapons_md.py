@@ -23,11 +23,13 @@ def build_weapon_markdown(equipment: object) -> list:
     # == Adding header at the top
     # ==========
     add_section_heading(markdown_children, f"{equipment.name}", level=1)
-    add_divider(markdown_children)
-    add_paragraph(
-        markdown_children,
-        f"Type: {equipment.category_range}  Cost: {equipment.cost['quantity']} {equipment.cost['unit']}  Weight: {equipment.weight} lbs",
-    )
+
+    headers = [
+        f"Type: {equipment.category_range}",
+        f"Cost: {equipment.cost['quantity']} {equipment.cost['unit']}",
+        f"Weight: {equipment.get_weight()}",
+    ]
+    add_table(markdown_children, headers)
     add_divider(markdown_children)
 
     if equipment.special:
@@ -47,6 +49,5 @@ def build_weapon_markdown(equipment: object) -> list:
         f"{equipment.get_range()}",
     ]
     add_table(markdown_children, stats_table_headers, [stats_table_row])
-    add_divider(markdown_children)
 
     return markdown_children
