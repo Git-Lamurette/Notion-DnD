@@ -173,7 +173,7 @@ def add_callout(
         ValueError: If the color is not supported
     """
 
-    if color not in [
+    supported_colors = [
         "blue",
         "blue_background",
         "brown",
@@ -193,13 +193,11 @@ def add_callout(
         "red",
         "red_background",
         "yellow_background",
-    ]:
+    ]
+
+    if color not in supported_colors:
         raise ValueError(
-            f"Invalid color '{color}'. Must be one of: "
-            "blue, blue_background, brown, brown_background, default, "
-            "gray, gray_background, green, green_background, orange, "
-            "orange_background, yellow, pink, pink_background, purple, "
-            "purple_background, red, red_background, yellow_background."
+            f"Color '{color}' is not supported. Supported colors are: {', '.join(supported_colors)}"
         )
 
     callout = {

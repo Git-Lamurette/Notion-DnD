@@ -35,7 +35,8 @@ from src.api.creature import creature_page, creature_db
 from src.api.weapons import weapons_page, weapons_db
 from src.api.armors import armor_page, armor_db
 from src.api.items import items_page, items_db
-from src.utils.get_keys import get_keys
+from src.api.magic_items import magic_items_page, magic_items_db
+# from src.utils.get_keys import get_keys
 
 import argparse
 
@@ -64,7 +65,10 @@ def main(args):
     logger.info("==")
     logger.info("=========================================================")
 
-    # get_keys(logger, DATA_DIRECTORY, "5e-SRD-Equipment.json")
+    # == Get the unique keys and values from the JSON file
+    # == Useful if this is your first time interacting with the JSON file -- Ensure you uncomment the import
+    # ========================
+    # get_keys(logger, DATA_DIRECTORY, "5e-SRD-Magic-Items.json", "variants")
 
     # == Using your auth key we access your Notion account
     notion = Client(auth=args.auth_key)
@@ -73,7 +77,8 @@ def main(args):
     # ========================
     # == This is creating everything needed for the creature database
     # ========================
-    if args.build.lower() in {"creatures", "all"}:
+
+    if any(item.lower() in ["creatures", "all"] for item in args.build):
         # == Creating the database itself
         creature_db_id = creature_db(logger, notion, args.database_id)
         # == Populating the database with all the markdown files
@@ -86,7 +91,7 @@ def main(args):
             args.end_range,
         )
 
-    if args.build.lower() in {"weapons", "all"}:
+    if any(item.lower() in ["weapons", "all"] for item in args.build):
         weapons_db_id = weapons_db(logger, notion, args.database_id)
 
         weapons_page(
@@ -98,7 +103,7 @@ def main(args):
             args.end_range,
         )
 
-    if args.build.lower() in {"armors", "all"}:
+    if any(item.lower() in ["armors", "all"] for item in args.build):
         armors_db_id = armor_db(logger, notion, args.database_id)
 
         armor_page(
@@ -110,10 +115,22 @@ def main(args):
             args.end_range,
         )
 
-    if args.build.lower() in {"items", "all"}:
+    if any(item in ["items", "all"] for item in args.build):
         items_db_id = items_db(logger, notion, args.database_id)
         # items_db_id = ""
         items_page(
+            logger,
+            notion,
+            DATA_DIRECTORY,
+            items_db_id,
+            args.start_range,
+            args.end_range,
+        )
+
+    if any(item in ["magic-items", "all"] for item in args.build):
+        items_db_id = magic_items_db(logger, notion, args.database_id)
+        # items_db_id = ""
+        magic_items_page(
             logger,
             notion,
             DATA_DIRECTORY,
@@ -132,6 +149,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-b",
         "--build",
+        nargs="+",
         type=str,
         required=True,
         help="Select your database you want to build",

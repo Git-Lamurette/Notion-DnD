@@ -1198,22 +1198,22 @@
     "variants": [
       {
         "index": "carpet-of-flying-3x5",
-        "name": "Carpet of Flying (3 ft. × 5 ft.)",
+        "name": "Carpet of Flying (3 ft. x 5 ft.)",
         "url": "/api/magic-items/carpet-of-flying-3x5"
       },
       {
         "index": "carpet-of-flying-4x6",
-        "name": "Carpet of Flying (4 ft. × 6 ft.)",
+        "name": "Carpet of Flying (4 ft. x 6 ft.)",
         "url": "/api/magic-items/carpet-of-flying-4x6"
       },
       {
         "index": "carpet-of-flying-5x7",
-        "name": "Carpet of Flying (5 ft. × 7 ft.)",
+        "name": "Carpet of Flying (5 ft. x 7 ft.)",
         "url": "/api/magic-items/carpet-of-flying-5x7"
       },
       {
         "index": "carpet-of-flying-6x9",
-        "name": "Carpet of Flying (6 ft. × 9 ft.)",
+        "name": "Carpet of Flying (6 ft. x 9 ft.)",
         "url": "/api/magic-items/carpet-of-flying-6x9"
       }
     ],
@@ -1224,17 +1224,17 @@
       "Four sizes of carpet of flying exist. The GM chooses the size of a given carpet or determines it randomly.",
       "| d100 | Size | Capacity | Flying Speed |",
       "|---|---|---|---|",
-      "| 01-20 | 3 ft. × 5 ft. | 200 lb. | 80 feet |",
-      "| 21-55 | 4 ft. × 6 ft. | 400 lb. | 60 feet |",
-      "| 56-80 | 5 ft. × 7 ft. | 600 lb. | 40 feet |",
-      "| 81-100 | 6 ft. × 9 ft. | 800 lb. | 30 feet |",
+      "| 01-20 | 3 ft. x 5 ft. | 200 lb. | 80 feet |",
+      "| 21-55 | 4 ft. x 6 ft. | 400 lb. | 60 feet |",
+      "| 56-80 | 5 ft. x 7 ft. | 600 lb. | 40 feet |",
+      "| 81-100 | 6 ft. x 9 ft. | 800 lb. | 30 feet |",
       "A carpet can carry up to twice the weight shown on the table, but it flies at half speed if it carries more than its normal capacity."
     ],
     "url": "/api/magic-items/carpet-of-flying"
   },
   {
     "index": "carpet-of-flying-3x5",
-    "name": "Carpet of Flying (3 ft. × 5 ft.)",
+    "name": "Carpet of Flying (3 ft. x 5 ft.)",
     "equipment_category": {
       "index": "wondrous-items",
       "name": "Wondrous Items",
@@ -1254,7 +1254,7 @@
   },
   {
     "index": "carpet-of-flying-4x6",
-    "name": "Carpet of Flying (4 ft. × 6 ft.)",
+    "name": "Carpet of Flying (4 ft. x 6 ft.)",
     "equipment_category": {
       "index": "wondrous-items",
       "name": "Wondrous Items",
@@ -1274,7 +1274,7 @@
   },
   {
     "index": "carpet-of-flying-5x7",
-    "name": "Carpet of Flying (5 ft. × 7 ft.)",
+    "name": "Carpet of Flying (5 ft. x 7 ft.)",
     "equipment_category": {
       "index": "wondrous-items",
       "name": "Wondrous Items",
@@ -1294,7 +1294,7 @@
   },
   {
     "index": "carpet-of-flying-6x9",
-    "name": "Carpet of Flying (6 ft. × 9 ft.)",
+    "name": "Carpet of Flying (6 ft. x 9 ft.)",
     "equipment_category": {
       "index": "wondrous-items",
       "name": "Wondrous Items",
@@ -7335,7 +7335,7 @@
       "Wondrous item, legendary",
       "This 2-foot-diameter black sphere is a hole in the multiverse, hovering in space and stabilized by a magical field surrounding it.",
       "The sphere obliterates all matter it passes through and all matter that passes through it. Artifacts are the exception. Unless an artifact is susceptible to damage from a sphere of annihilation, it passes through the sphere unscathed. Anything else that touches the sphere but isn't wholly engulfed and obliterated by it takes 4d10 force damage.",
-      "The sphere is stationary until someone controls it. If you are within 60 feet of an uncontrolled sphere, you can use an action to make a DC 25 Intelligence (Arcana) check. On a success, the sphere levitates in one direction of your choice, up to a number of feet equal to 5 × your Intelligence modifier (minimum 5 feet). On a failure, the sphere moves 10 feet toward you. A creature whose space the sphere enters must succeed on a DC 13 Dexterity saving throw or be touched by it, taking 4d10 force damage.",
+      "The sphere is stationary until someone controls it. If you are within 60 feet of an uncontrolled sphere, you can use an action to make a DC 25 Intelligence (Arcana) check. On a success, the sphere levitates in one direction of your choice, up to a number of feet equal to 5 x your Intelligence modifier (minimum 5 feet). On a failure, the sphere moves 10 feet toward you. A creature whose space the sphere enters must succeed on a DC 13 Dexterity saving throw or be touched by it, taking 4d10 force damage.",
       "If you attempt to control a sphere that is under another creature's control, you make an Intelligence (Arcana) check contested by the other creature's Intelligence (Arcana) check. The winner of the contest gains control of the sphere and can levitate it as normal.",
       "If the sphere comes into contact with a planar portal, such as that created by the gate spell, or an extradimensional space, such as that within a portable hole, the GM determines randomly what happens, using the following table.",
       "| d100 | Result |",
@@ -7449,12 +7449,12 @@
       "***Power Strike.*** When you hit with a melee attack using the staff, you can expend 1 charge to deal an extra 1d6 force damage to the target.",
       "***Spells.*** While holding this staff, you can use an action to expend 1 or more of its charges to cast one of the following spells from it, using your spell save DC and spell attack bonus: cone of cold (5 charges), fireball (5th-level version, 5 charges), globe of invulnerability (6 charges), hold monster (5 charges), levitate (2 charges), lightning bolt (5th-level version, 5 charges), magic missile (1 charge), ray of enfeeblement (1 charge), or wall of force (5 charges).",
       "***Retributive Strike.*** You can use an action to break the staff over your knee or against a solid surface, performing a retributive strike. The staff is destroyed and releases its remaining magic in an explosion that expands to fill a 30-foot-radius sphere centered on it.",
-      "You have a 50 percent chance to instantly travel to a random plane of existence, avoiding the explosion. If you fail to avoid the effect, you take force damage equal to 16 × the number of charges in the staff. Every other creature in the area must make a DC 17 Dexterity saving throw. On a failed save, a creature takes an amount of damage based on how far away it is from the point of origin, as shown in the following table. On a successful save, a creature takes half as much damage.",
+      "You have a 50 percent chance to instantly travel to a random plane of existence, avoiding the explosion. If you fail to avoid the effect, you take force damage equal to 16 x the number of charges in the staff. Every other creature in the area must make a DC 17 Dexterity saving throw. On a failed save, a creature takes an amount of damage based on how far away it is from the point of origin, as shown in the following table. On a successful save, a creature takes half as much damage.",
       "| Distance from Origin | Damage |",
       "|---|---|",
-      "| 10 ft. away or closer | 8 × the number of charges in the staff |",
-      "| 11 to 20 ft. away | 6 × the number of charges in the staff |",
-      "| 21 to 30 ft. away | 4 × the number of charges in the staff |"
+      "| 10 ft. away or closer | 8 x the number of charges in the staff |",
+      "| 11 to 20 ft. away | 6 x the number of charges in the staff |",
+      "| 21 to 30 ft. away | 4 x the number of charges in the staff |"
     ],
     "url": "/api/magic-items/staff-of-power"
   },
@@ -7520,12 +7520,12 @@
       "***Spells.*** While holding the staff, you can use an action to expend some of its charges to cast one of the following spells from it, using your spell save DC and spellcasting ability: conjure elemental (7 charges), dispel magic (3 charges), fireball (7th-level version, 7 charges), flaming sphere (2 charges), ice storm (4 charges), invisibility (2 charges), knock (2 charges), lightning bolt (7th-level version, 7 charges), passwall (5 charges), plane shift (7 charges), telekinesis (5 charges), wall of fire (4 charges), or web (2 charges).",
       "You can also use an action to cast one of the following spells from the staff without using any charges: arcane lock, detect magic, enlarge/reduce, light, mage hand, or protection from evil and good.",
       "***Retributive Strike.*** You can use an action to break the staff over your knee or against a solid surface, performing a retributive strike. The staff is destroyed and releases its remaining magic in an explosion that expands to fill a 30-foot-radius sphere centered on it.",
-      "You have a 50 percent chance to instantly travel to a random plane of existence, avoiding the explosion. If you fail to avoid the effect, you take force damage equal to 16 × the number of charges in the staff. Every other creature in the area must make a DC 17 Dexterity saving throw. On a failed save, a creature takes an amount of damage based on how far away it is from the point of origin, as shown in the following table. On a successful save, a creature takes half as much damage.",
+      "You have a 50 percent chance to instantly travel to a random plane of existence, avoiding the explosion. If you fail to avoid the effect, you take force damage equal to 16 x the number of charges in the staff. Every other creature in the area must make a DC 17 Dexterity saving throw. On a failed save, a creature takes an amount of damage based on how far away it is from the point of origin, as shown in the following table. On a successful save, a creature takes half as much damage.",
       "| Distance from Origin | Damage |",
       "|---|---|",
-      "| 10 ft. away or closer | 8 × the number of charges in the staff |",
-      "| 11 to 20 ft. away | 6 × the number of charges in the staff |",
-      "| 21 to 30 ft. away | 4 × the number of charges in the staff |"
+      "| 10 ft. away or closer | 8 x the number of charges in the staff |",
+      "| 11 to 20 ft. away | 6 x the number of charges in the staff |",
+      "| 21 to 30 ft. away | 4 x the number of charges in the staff |"
     ],
     "url": "/api/magic-items/staff-of-the-magi"
   },
@@ -7772,7 +7772,7 @@
     "variant": false,
     "desc": [
       "Wondrous item, legendary (requires attunement)",
-      "When you make an Intelligence (Arcana) check to control a sphere of annihilation while you are holding this talisman, you double your proficiency bonus on the check. In addition, when you start your turn with control over a sphere of annihilation, you can use an action to levitate it 10 feet plus a number of additional feet equal to 10 × your Intelligence modifier."
+      "When you make an Intelligence (Arcana) check to control a sphere of annihilation while you are holding this talisman, you double your proficiency bonus on the check. In addition, when you start your turn with control over a sphere of annihilation, you can use an action to levitate it 10 feet plus a number of additional feet equal to 10 x your Intelligence modifier."
     ],
     "url": "/api/magic-items/talisman-of-the-sphere"
   },
@@ -8281,7 +8281,7 @@
       "| 70-79 | You cast fireball. |",
       "| 80-84 | You cast invisibility on yourself. |",
       "| 85-87 | Leaves grow from the target. If you chose a point in space as the target, leaves sprout from the creature nearest to that point. Unless they are picked off, the leaves turn brown and fall off after 24 hours. |",
-      "| 88-90 | A stream of 1d4 × 10 gems, each worth 1 gp, shoots from the wand's tip in a line 30 feet long and 5 feet wide. Each gem deals 1 bludgeoning damage, and the total damage of the gems is divided equally among all creatures in the line. |",
+      "| 88-90 | A stream of 1d4 x 10 gems, each worth 1 gp, shoots from the wand's tip in a line 30 feet long and 5 feet wide. Each gem deals 1 bludgeoning damage, and the total damage of the gems is divided equally among all creatures in the line. |",
       "| 91-95 | A burst of colorful shimmering light extends from you in a 30-foot radius. You and each creature in the area that can see must succeed on a DC 15 Constitution saving throw or become blinded for 1 minute. A creature can repeat the saving throw at the end of each of its turns, ending the effect on itself on a success. |",
       "| 96-97 | The target's skin turns bright blue for 1d10 days. If you chose a point in space, the creature nearest to that point is affected. |",
       "| 98-100 | If you targeted a creature, it must make a DC 15 Constitution saving throw. If you didn't target a creature, you become the target and must make the saving throw. If the saving throw fails by 5 or more, the target is instantly petrified. On any other failed save, the target is restrained and begins to turn to stone. While restrained in this way, the target must repeat the saving throw at the end of its next turn, becoming petrified on a failure or ending the effect on a success. The petrification lasts until the target is freed by the greater restoration spell or similar magic. |"

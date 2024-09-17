@@ -1,3 +1,4 @@
+import os
 import logging
 import datetime
 
@@ -24,8 +25,14 @@ def configure_logging(log_dir: str) -> logging.Logger:
     console_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
     logger.addHandler(console_handler)
 
+    # == Ensure the directory for the log file exists
+    log_file_path = f"{log_dir}/{formatted_datetime}-D&D-Notion.log"
+    log_dir = os.path.dirname(log_file_path)
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
     # == Create a file handler
-    file_path = f"logs/{formatted_datetime}-D&D-Notion.log"
+    file_path = log_file_path
     file_handler = logging.FileHandler(file_path)
     file_handler.setFormatter(
         logging.Formatter("%(asctime)s == %(levelname)s == %(message)s")

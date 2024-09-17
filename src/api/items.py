@@ -89,7 +89,7 @@ def items_page(
             children_properties = []
 
             # == Building markdown for items
-            children_properties, relations_to_create = build_items_markdown(
+            children_properties = build_items_markdown(
                 items,
                 notion,
                 logger,
@@ -104,7 +104,6 @@ def items_page(
                 database_id,
                 markdown_properties,
                 children_properties,
-                relations_to_create,
             )
 
             sleep(0.5)

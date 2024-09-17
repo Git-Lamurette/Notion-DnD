@@ -50,6 +50,10 @@ def build_armor_markdown(equipment: object) -> list:
         f"{' -- ' if not equipment.stealth_disadvantage else "Disadvantage"}",
         f"{equipment.weight} lbs",
     ]
-    add_table(markdown_children, stats_table_headers, [stats_table_row])
+    add_table(
+        markdown_children,
+        stats_table_headers,
+        [stats_table_row],
+    )
 
     return markdown_children
