@@ -45,6 +45,9 @@ def get_keys(
             elif isinstance(data[f"{key_val}"], str):
                 unique_values.add(data[f"{key_val}"])
 
+            elif isinstance(data[f"{key_val}"], int):
+                unique_values.add(data[f"{key_val}"])
+
             elif isinstance(data[f"{key_val}"], list):
                 for item in data[f"{key_val}"]:
                     if isinstance(item, dict):

@@ -36,6 +36,7 @@ from src.api.weapons import weapons_page, weapons_db
 from src.api.armors import armor_page, armor_db
 from src.api.items import items_page, items_db
 from src.api.magic_items import magic_items_page, magic_items_db
+from src.api.spells import spells_page, spells_db
 # from src.utils.get_keys import get_keys
 
 import argparse
@@ -68,7 +69,7 @@ def main(args):
     # == Get the unique keys and values from the JSON file
     # == Useful if this is your first time interacting with the JSON file -- Ensure you uncomment the import
     # ========================
-    # get_keys(logger, DATA_DIRECTORY, "5e-SRD-Magic-Items.json", "variants")
+    # get_keys(logger, DATA_DIRECTORY, "5e-SRD-Spells.json", "casting_time")
 
     # == Using your auth key we access your Notion account
     notion = Client(auth=args.auth_key)
@@ -135,6 +136,17 @@ def main(args):
             notion,
             DATA_DIRECTORY,
             items_db_id,
+            args.start_range,
+            args.end_range,
+        )
+
+    if any(item in ["spells", "all"] for item in args.build):
+        spells_db_id = spells_db(logger, notion, args.database_id)
+        spells_page(
+            logger,
+            notion,
+            DATA_DIRECTORY,
+            spells_db_id,
             args.start_range,
             args.end_range,
         )
