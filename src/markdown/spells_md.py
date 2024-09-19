@@ -37,8 +37,8 @@ def build_spells_markdown(
     stats_table_row = [
         f"{str(spell.level) if spell.level != 0 else "Cantrip"}",
         f"{spell.casting_time}",
-        f"{spell.range}",
-        f"{', '.join(spell.components)}{'*' if spell.material else ''}",
+        f"{spell.range}{f' ({spell.area_of_effect["size"]} ft. {spell.area_of_effect["type"].capitalize()})' if spell.area_of_effect else ''}",
+        f"{', '.join(spell.components)}{' *' if spell.material else ''}",
     ]
     add_table(markdown_children, stats_table_headers, [stats_table_row])
 
@@ -56,7 +56,22 @@ def build_spells_markdown(
         f"{spell.get_damage_effect()}",
     ]
     add_table(markdown_children, stats_table_headers, [stats_table_row])
-    add_divider(markdown_children)
+
+    if spell.desc:
+        add_section_heading(markdown_children, "Description", level=3)
+        add_divider(markdown_children)
+        for line in spell.desc:
+            add_paragraph(markdown_children, f"{line}")
+
+    if spell.higher_level:
+        add_section_heading(markdown_children, "At Higher Levels", level=3)
+        add_divider(markdown_children)
+        for line in spell.higher_level:
+            add_paragraph(markdown_children, f"{line}")
+
+    if spell.material:
+        add_divider(markdown_children)
+        add_paragraph(markdown_children, f" * ({spell.material})")
 
     """
     headers = [

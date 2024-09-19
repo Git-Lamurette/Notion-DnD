@@ -5,6 +5,27 @@ import logging
 from notion_client import client
 
 
+def create_page_under_page(
+    logger: logging.Logger,
+    notion: client,
+    database_id: str,
+    title,
+):
+    try:
+        response = notion.pages.create(
+            parent={"page_id": database_id},
+            properties={"title": [{"type": "text", "text": {"content": title}}]},
+        )
+
+        logger.info(f"Page created with ID: {response['id']}")
+        return response["id"]
+
+    except APIResponseError as e:
+        logger.error(f"Response status: {e.status}")
+        logger.error(f"An API error occurred: {e}")
+        sys.exit(1)
+
+
 def create_page(
     logger: logging.Logger,
     notion: client,

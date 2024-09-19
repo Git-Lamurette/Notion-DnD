@@ -1,16 +1,59 @@
-def add_paragraph(markdown_children: list, text: str) -> None:
+def add_paragraph(markdown_children: list, text: str, bold=False) -> None:
     """Make a markdown paragraph
 
     Args:
         markdown_children (list): You markdown list that contain all elements so far
         text (str): The content for the paragraph
     """
-    paragraph = {
-        "object": "block",
-        "type": "paragraph",
-        "paragraph": {"rich_text": [{"type": "text", "text": {"content": text}}]},
-    }
-    markdown_children.append(paragraph)
+    import re
+
+    # == Regular expression to find bold text
+    bold_pattern = re.compile(r"\*\*\*(.*?)\*\*\*")
+
+    # Split the text by the bold pattern
+    split_text = bold_pattern.split(text)
+
+    # Initialize the rich_text list
+    rich_text = []
+
+    for index, part in enumerate(split_text):
+        if index % 2 == 0:
+            # Regular text
+            rich_text.append(
+                {
+                    "type": "text",
+                    "text": {"content": part},
+                    "annotations": {
+                        "bold": bold,
+                        "italic": False,
+                        "strikethrough": False,
+                        "underline": False,
+                        "code": False,
+                        "color": "default",
+                    },
+                }
+            )
+        else:
+            # Bold text
+            rich_text.append(
+                {
+                    "type": "text",
+                    "text": {"content": part},
+                    "annotations": {
+                        "bold": True,
+                        "italic": False,
+                        "strikethrough": False,
+                        "underline": False,
+                        "code": False,
+                        "color": "default",
+                    },
+                }
+            )
+
+    # Append the paragraph block with the rich_text list
+    markdown_children.append(
+        {"object": "block", "type": "paragraph", "paragraph": {"rich_text": rich_text}}
+    )
 
 
 def add_section_heading(markdown_children: list, text: str, level: int = 2) -> None:

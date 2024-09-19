@@ -30,6 +30,7 @@ This wil build all databases
 """
 
 from notion_client import Client
+from src.api.notion_call import create_page_under_page
 from src.utils.logger import configure_logging
 from src.api.creature import creature_page, creature_db
 from src.api.weapons import weapons_page, weapons_db
@@ -37,6 +38,9 @@ from src.api.armors import armor_page, armor_db
 from src.api.items import items_page, items_db
 from src.api.magic_items import magic_items_page, magic_items_db
 from src.api.spells import spells_page, spells_db
+from src.api.weapons_properties import weapons_properties_db, weapons_properties_page
+from src.api.skills import skills_db, skills_page
+from src.api.magic_schools import magic_schools_db, magic_schools_page
 # from src.utils.get_keys import get_keys
 
 import argparse
@@ -149,6 +153,58 @@ def main(args):
             spells_db_id,
             args.start_range,
             args.end_range,
+        )
+
+    # == This is creating all of the refrence databases
+    # ========================
+
+    reference_page_id = create_page_under_page(
+        logger, notion, args.database_id, "Reference"
+    )
+
+    # == Weapons properties
+    # ========================
+
+    if any(item in ["weapon-properties", "all"] for item in args.build):
+        weapons_prop_db = weapons_properties_db(logger, notion, reference_page_id)
+        weapons_properties_page(
+            logger,
+            notion,
+            DATA_DIRECTORY,
+            weapons_prop_db,
+            args.start_range,
+            args.end_range,
+            json_file="5e-SRD-Weapon-Properties.json",
+        )
+
+    # == Skills
+    # ========================
+
+    if any(item in ["skills", "all"] for item in args.build):
+        skills_db_id = skills_db(logger, notion, reference_page_id)
+        skills_page(
+            logger,
+            notion,
+            DATA_DIRECTORY,
+            skills_db_id,
+            args.start_range,
+            args.end_range,
+            json_file="5e-SRD-Skills.json",
+        )
+
+    # == Magic Schools
+    # ========================
+
+    if any(item in ["magic-schools", "all"] for item in args.build):
+        magic_schools_db_id = magic_schools_db(logger, notion, reference_page_id)
+        magic_schools_page(
+            logger,
+            notion,
+            DATA_DIRECTORY,
+            magic_schools_db_id,
+            args.start_range,
+            args.end_range,
+            json_file="5e-SRD-Magic-Schools.json",
         )
 
 
