@@ -114,7 +114,7 @@ def add_numbered_list(markdown_children: list, items: list) -> None:
     markdown_children.extend(list_items)
 
 
-def add_table(markdown_children: list, headers: list, rows: list = None) -> None:
+def add_table(markdown_children: list, headers: list, rows: list = []) -> None:
     """Add a table to your markdown
 
     Example:
@@ -202,7 +202,7 @@ def add_callout(
     markdown_children: list,
     text: str,
     color: str = "blue_background",
-    icon: str = None,
+    icon: str = "",
 ) -> None:
     """Add a callout box
 

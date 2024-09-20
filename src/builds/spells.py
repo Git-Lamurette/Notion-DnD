@@ -1,19 +1,33 @@
 from src.classes.spells_class import _spell
-from src.markdown.spells_md import build_spells_markdown
 from src.utils.load_json import load_data
-from src.api.notion_call import create_page, create_database
+from src.api.notion_api import create_page, create_database
 from typing import TYPE_CHECKING, Union
 from time import sleep
 
 if TYPE_CHECKING:
     import logging
-    from notion_client import client
+    from notion_client import Client
 
 
-def spells_page(
-    logger: "logging.Logger",
-    notion: "client",
+async def build_spells_database(logger, notion, data_directory, json_file, args):
+    spells_db_id = spells_db(logger, notion, args.database_id)
+    if isinstance(spells_db_id, str):
+        await spells_page(
+            logger,
+            notion,
+            data_directory,
+            json_file,
+            spells_db_id,
+            args.start_range,
+            args.end_range,
+        )
+
+
+async def spells_page(
+    logger: logging.Logger,
+    notion: Client,
     data_directory: str,
+    json_file: str,
     database_id: str,
     start: int,
     end: Union[None, int],
@@ -30,7 +44,11 @@ def spells_page(
         end (Union[None, int]): If you want to only capture a range specify the end
     """
     # == Get spells Data
-    spells_data = load_data(logger, data_directory, "5e-SRD-Spells.json")
+    spells_data = load_data(logger, data_directory, json_file)
+
+    if not isinstance(spells_data, (list, dict)):
+        logger.error("Loaded data is not a list or dictionary")
+        return
 
     # == Apply range to spells data
     if end is None or end > len(spells_data):
@@ -63,7 +81,13 @@ def spells_page(
                     "name": str(spells.level) if spells.level != 0 else "Cantrip"
                 }
             },
-            "School": {"select": {"name": spells.school.get("name", "Unknown School")}},
+            "School": {
+                "select": {
+                    "name": spells.school.get("name")
+                    if isinstance(spells.school, dict)
+                    else "Unknown School"
+                }
+            },
             "Casting Time": {"multi_select": [{"name": spells.casting_time}]},
             "Range": {
                 "rich_text": [
@@ -75,7 +99,8 @@ def spells_page(
             },
             "Components": {
                 "multi_select": [
-                    {"name": component.capitalize()} for component in spells.components
+                    {"name": component.capitalize()}
+                    for component in spells.components or []
                 ]
             },
             "Duration": {
@@ -90,8 +115,7 @@ def spells_page(
             "Ritual": {"checkbox": spells.ritual},
             "Classes and Subclasses": {
                 "multi_select": [
-                    {"name": cls["name"].capitalize()}
-                    for cls in spells.classes + spells.subclasses
+                    {"name": cls} for cls in spells.classes_and_subclasses()
                 ]
             },
         }
@@ -131,7 +155,7 @@ def spells_page(
         )
         # == Sending api call
         # ==========
-        create_page(
+        await create_page(
             logger,
             notion,
             database_id,
@@ -142,7 +166,7 @@ def spells_page(
         sleep(0.5)
 
 
-def spells_db(logger: "logging.Logger", notion: "client", database_id: str) -> str:
+async def spells_db(logger: logging.Logger, notion: Client, database_id: str) -> str:
     """This generates the api calls needed for Notion. This just builds the empty database page with the required options.
 
     Args:
@@ -268,6 +292,82 @@ def spells_db(logger: "logging.Logger", notion: "client", database_id: str) -> s
         },
     }
 
-    return create_database(
+    database_id = await create_database(
         logger, notion, database_id, database_name, database_spells_properties
     )
+
+    return database_id
+
+
+def build_spells_markdown(
+    spell: _spell, notion: Client, logger: "logging.Logger", database_id: str
+) -> list:
+    from src.builds.children_md import (
+        add_paragraph,
+        add_section_heading,
+        add_table,
+        add_divider,
+    )
+    # == This is all of the building of the api call for
+    # == the markdown body
+    # =======================================================
+
+    # == Initializing the markdown children list
+    # ==========
+    markdown_children = []
+
+    # == Adding header at the top
+    # ==========
+    add_section_heading(
+        markdown_children,
+        f"{spell.name}" if isinstance(spell.name, str) else "",
+        level=1,
+    )
+
+    stats_table_headers = [
+        "Level",
+        "Casting Time",
+        "Range/Area",
+        "Components",
+    ]
+
+    stats_table_row = [
+        f"{str(spell.level) if spell.level != 0 else "Cantrip"}",
+        f"{spell.casting_time}",
+        f"{spell.range}{f' ({spell.area_of_effect["size"]} ft. {spell.area_of_effect["type"].capitalize()})' if spell.area_of_effect else ''}",
+        f"{', '.join(spell.components)}{' *' if spell.material else ''}",
+    ]
+    add_table(markdown_children, stats_table_headers, [stats_table_row])
+
+    stats_table_headers = [
+        "Duration",
+        "School",
+        "Attack/Save",
+        "Damage/Effect",
+    ]
+
+    stats_table_row = [
+        f"{spell.duration}",
+        f"{spell.school['name']}",
+        f"{spell.get_attack_spell_save()}",
+        f"{spell.get_damage_effect()}",
+    ]
+    add_table(markdown_children, stats_table_headers, [stats_table_row])
+
+    if spell.desc:
+        add_section_heading(markdown_children, "Description", level=3)
+        add_divider(markdown_children)
+        for line in spell.desc:
+            add_paragraph(markdown_children, f"{line}")
+
+    if spell.higher_level:
+        add_section_heading(markdown_children, "At Higher Levels", level=3)
+        add_divider(markdown_children)
+        for line in spell.higher_level:
+            add_paragraph(markdown_children, f"{line}")
+
+    if spell.material:
+        add_divider(markdown_children)
+        add_paragraph(markdown_children, f" * ({spell.material})")
+
+    return markdown_children

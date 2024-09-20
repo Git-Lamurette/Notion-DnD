@@ -2,17 +2,17 @@ from notion_client.errors import APIResponseError
 import sys
 from time import sleep
 import logging
-from notion_client import client
+from notion_client import Client
 
 
-def create_page_under_page(
+async def create_page_under_page(
     logger: logging.Logger,
-    notion: client,
+    notion: Client,
     database_id: str,
     title,
 ):
     try:
-        response = notion.pages.create(
+        response = await notion.pages.create(
             parent={"page_id": database_id},
             properties={"title": [{"type": "text", "text": {"content": title}}]},
         )
@@ -26,11 +26,11 @@ def create_page_under_page(
         sys.exit(1)
 
 
-def create_page(
+async def create_page(
     logger: logging.Logger,
-    notion: client,
+    notion: Client,
     database_id: str,
-    markdown_properties: list,
+    markdown_properties: dict,
     children_properties: list,
 ) -> None:
     """This function creates a page in Notion. It is used to create the pages for the creatures and equipment.
@@ -38,7 +38,7 @@ def create_page(
     Args:
 
         logger (logging.Logger): Logging object
-        notion (client): Notion client object
+        notion (client): Notion Client object
         database_id (str): Database ID
         markdown_properties (list): List of properties for the page
         children_properties (list): List of children properties for the page
@@ -47,7 +47,7 @@ def create_page(
 
     try:
         # == Sending response to notion API
-        response = notion.pages.create(
+        response = await notion.pages.create(
             parent={"database_id": database_id},
             properties=markdown_properties,
             children=children_properties,
@@ -62,19 +62,19 @@ def create_page(
         sys.exit(1)
 
 
-def create_database(
+async def create_database(
     logger: logging.Logger,
-    notion: client,
+    notion: Client,
     database_id: str,
-    database_name: list,
-    database_properties: list,
-) -> None:
+    database_name: str,
+    database_properties: dict,
+) -> str:
     """This function creates a database in Notion. It is used to create the database for the creatures and equipment.
 
     Args:
 
         logger (logging.Logger): Logging object
-        notion (client): Notion client object
+        notion (client): Notion Client object
         database_id (str): Database ID
         database_name (list): Name of the database
         database_properties (list): Properties for the database
@@ -83,7 +83,7 @@ def create_database(
 
     try:
         # == Sending response to notion API
-        response = notion.databases.create(
+        response = await notion.databases.create(
             parent={"type": "page_id", "page_id": database_id},
             title=[{"type": "text", "text": {"content": f"{database_name}"}}],
             properties=database_properties,

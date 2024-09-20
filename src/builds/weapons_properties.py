@@ -1,5 +1,5 @@
 from src.utils.load_json import load_data
-from src.api.notion_call import create_page, create_database
+from src.api.notion_api import create_page, create_database
 from typing import TYPE_CHECKING, Union
 from time import sleep
 
@@ -8,17 +8,30 @@ if TYPE_CHECKING:
     from notion_client import client
 
 
-def magic_schools_page(
+def build_weapon_properties_database(logger, notion, data_directory, json_file, args):
+    weapons_prop_db = weapons_properties_db(logger, notion, args.reference_page_id)
+    weapons_properties_page(
+        logger,
+        notion,
+        data_directory,
+        json_file,
+        weapons_prop_db,
+        args.start_range,
+        args.end_range,
+    )
+
+
+def weapons_properties_page(
     logger: "logging.Logger",
     notion: "client",
     data_directory: str,
+    json_file: str,
     database_id: str,
     start: int,
     end: Union[None, int],
-    json_file: str,
 ) -> None:
     """This generates the api calls needed for Notion. This parses the JSON and build the markdown body for the API call.
-    It iterates through each magic_schools in the json depending on params.
+    It iterates through each weapon properties in the json depending on params.
 
     Args:
         logger (logging.Logger): Logging object
@@ -28,28 +41,28 @@ def magic_schools_page(
         start (int): If you want to only capture a range specify the start
         end (Union[None, int]): If you want to only capture a range specify the end
     """
-    # == Get magic_schools Data
-    magic_schools_data = load_data(logger, data_directory, json_file)
+    # == Get weapon properties Data
+    weapons_properties_data = load_data(logger, data_directory, json_file)
 
-    # == Apply range to magic_schools data
-    if end is None or end > len(magic_schools_data):
-        end = len(magic_schools_data)
+    # == Apply range to weapon properties data
+    if end is None or end > len(weapons_properties_data):
+        end = len(weapons_properties_data)
 
-    # == Iterates through the specified range of the magic_schools JSON
+    # == Iterates through the specified range of the weapon properties JSON
     for index in range(start, end):
-        schools = magic_schools_data[index]
+        selected_prop = weapons_properties_data[index]
 
         logger.info(
-            f"Building Markdown for magic_schools -- {schools['name']} -- Index -- {index} --"
+            f"Building Markdown for weapon properties -- {selected_prop['name']} -- Index -- {index} --"
         )
 
-        # == Building markdown properties from _magic_schools class
+        # == Building markdown properties from _weapon properties class
         markdown_properties = {
             "Name": {
                 "title": [
                     {
                         "type": "text",
-                        "text": {"content": schools["name"]},
+                        "text": {"content": selected_prop["name"]},
                     }
                 ]
             },
@@ -57,7 +70,9 @@ def magic_schools_page(
                 "rich_text": [
                     {
                         "type": "text",
-                        "text": {"content": schools["desc"]},
+                        "text": {
+                            "content": "".join(mn for mn in selected_prop["desc"])
+                        },
                     }
                 ]
             },
@@ -66,8 +81,8 @@ def magic_schools_page(
         # == Ensure children_properties list is empty
         children_properties = []
 
-        # == Building markdown for magic_schools
-        children_properties = build_magic_schools_markdown(schools)
+        # == Building markdown for weapon properties
+        children_properties = build_weapons_properties_markdown(selected_prop)
 
         # == Sending api call
         # ==========
@@ -78,7 +93,7 @@ def magic_schools_page(
         sleep(0.5)
 
 
-def magic_schools_db(
+def weapons_properties_db(
     logger: "logging.Logger", notion: "client", database_id: str
 ) -> str:
     """This generates the api calls needed for Notion. This just builds the empty database page with the required options.
@@ -93,7 +108,7 @@ def magic_schools_db(
     """
 
     # == Database Name
-    database_name = "Magic Schools"
+    database_name = "Weapon Properties"
 
     # == Building markdown database properties
     database_weapon_properties = {
@@ -106,8 +121,8 @@ def magic_schools_db(
     )
 
 
-def build_magic_schools_markdown(magic_schools_data: object) -> list:
-    from src.markdown.children_md import (
+def build_weapons_properties_markdown(weapons_properties_data: object) -> list:
+    from src.builds.children_md import (
         add_paragraph,
         add_section_heading,
         add_divider,
@@ -122,8 +137,12 @@ def build_magic_schools_markdown(magic_schools_data: object) -> list:
 
     # == Adding header at the top
     # ==========
-    add_section_heading(markdown_children, f"{magic_schools_data['name']}", level=1)
+    add_section_heading(
+        markdown_children, f"{weapons_properties_data['name']}", level=1
+    )
     add_divider(markdown_children)
-    add_paragraph(markdown_children, magic_schools_data["desc"])
+    add_paragraph(
+        markdown_children, "".join(desc for desc in weapons_properties_data["desc"])
+    )
 
     return markdown_children

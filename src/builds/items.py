@@ -1,19 +1,30 @@
 from src.classes.equipment_class import _equipment
-from src.markdown.items_md import build_items_markdown
 from src.utils.load_json import load_data
-from src.api.notion_call import create_page, create_database
-from typing import TYPE_CHECKING, Union
+from src.api.notion_api import create_page, create_database
+from typing import Union
 from time import sleep
-
-if TYPE_CHECKING:
-    import logging
-    from notion_client import client
+import logging
+from notion_client import Client
 
 
-def items_page(
-    logger: "logging.Logger",
-    notion: "client",
+async def build_items_database(logger, notion, data_directory, json_file, args):
+    items_db_id = await items_db(logger, notion, args.database_id)
+    await items_page(
+        logger,
+        notion,
+        data_directory,
+        json_file,
+        items_db_id,
+        args.start_range,
+        args.end_range,
+    )
+
+
+async def items_page(
+    logger: logging.Logger,
+    notion: Client,
     data_directory: str,
+    json_file: str,
     database_id: str,
     start: int,
     end: Union[None, int],
@@ -30,7 +41,11 @@ def items_page(
         end (Union[None, int]): If you want to only capture a range specify the end
     """
     # == Get items Data
-    items_data = load_data(logger, data_directory, "5e-SRD-Equipment.json")
+    items_data = load_data(logger, data_directory, json_file)
+
+    if not isinstance(items_data, (list, dict)):
+        logger.error("Loaded data is not a list or dictionary")
+        return
 
     # == Apply range to items data
     if end is None or end > len(items_data):
@@ -98,7 +113,7 @@ def items_page(
 
             # == Sending api call
             # ==========
-            create_page(
+            await create_page(
                 logger,
                 notion,
                 database_id,
@@ -109,7 +124,7 @@ def items_page(
             sleep(0.5)
 
 
-def items_db(logger: "logging.Logger", notion: "client", database_id: str) -> str:
+async def items_db(logger: logging.Logger, notion: Client, database_id: str) -> str:
     """This generates the api calls needed for Notion. This just builds the empty database page with the required options.
 
     Args:
@@ -159,6 +174,58 @@ def items_db(logger: "logging.Logger", notion: "client", database_id: str) -> st
         "Cost": {"rich_text": {}},
         "Weight": {"number": {}},
     }
-    return create_database(
+    database_id = await create_database(
         logger, notion, database_id, database_name, database_items_properties
     )
+    return database_id
+
+
+def build_items_markdown(
+    equipment: _equipment, notion: Client, logger: logging.Logger, database_id: str
+) -> list:
+    from src.builds.children_md import (
+        add_paragraph,
+        add_section_heading,
+        add_table,
+        add_divider,
+    )
+    # == This is all of the building of the api call for
+    # == the markdown body
+    # =======================================================
+
+    # == Initializing the markdown children list
+    # ==========
+    markdown_children = []
+
+    # == Adding header at the top
+    # ==========
+    add_section_heading(markdown_children, f"{equipment.name}", level=1)
+    headers = [
+        f"Type: {equipment.equipment_category['name']}",
+        f"Cost: {equipment.cost['quantity']} {equipment.cost['unit']}",
+        f"Weight: {equipment.get_weight()}",
+    ]
+
+    if equipment.speed:
+        speed: str = f"Speed: {equipment.speed['quantity']} {equipment.speed['unit']}"
+        headers.append(speed)
+
+    if equipment.capacity:
+        cap: str = f"Carry Weight: {equipment.capacity}"
+        headers.append(cap)
+
+    add_table(markdown_children, headers)
+
+    if equipment.desc:
+        add_divider(markdown_children)
+        for desc in equipment.desc:
+            add_paragraph(markdown_children, desc)
+
+    if equipment.contents:
+        add_divider(markdown_children)
+        for content in equipment.contents:
+            add_paragraph(
+                markdown_children, f"{content["quantity"]} x {content["item"]["name"]}"
+            )
+
+    return markdown_children
