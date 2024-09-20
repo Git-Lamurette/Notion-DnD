@@ -222,11 +222,11 @@ def build_creature_markdown(creature: object) -> list:
 
     # == Proficiencies
     # ==========
-    saving_profs = creature.get_proficiencies()
+    saving_profs, skill_prof = creature.get_proficencies()
+
     if saving_profs:
         add_paragraph(markdown_children, f"Saving proficiencies: {saving_profs}")
 
-    skill_prof = creature.get_skill_proficiencies()
     if skill_prof:
         add_paragraph(markdown_children, f"Skill proficiencies: {skill_prof}")
 
@@ -257,7 +257,8 @@ def build_creature_markdown(creature: object) -> list:
     parsed_senses = creature.get_senses()
     if parsed_senses:
         add_paragraph(markdown_children, f"Senses: {parsed_senses}")
-    add_paragraph(markdown_children, f"Language(s) : {creature.get_languages()}")
+
+    add_paragraph(markdown_children, f"Language(s) : {creature.languages}")
 
     # == CR (XP) -- Prof Bonus
     # ==========

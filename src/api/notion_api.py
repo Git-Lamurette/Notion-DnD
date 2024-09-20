@@ -5,14 +5,14 @@ import logging
 from notion_client import Client
 
 
-async def create_page_under_page(
+def create_page_under_page(
     logger: logging.Logger,
     notion: Client,
     database_id: str,
     title,
 ):
     try:
-        response = await notion.pages.create(
+        response = notion.pages.create(
             parent={"page_id": database_id},
             properties={"title": [{"type": "text", "text": {"content": title}}]},
         )
@@ -26,7 +26,7 @@ async def create_page_under_page(
         sys.exit(1)
 
 
-async def create_page(
+def create_page(
     logger: logging.Logger,
     notion: Client,
     database_id: str,
@@ -47,7 +47,7 @@ async def create_page(
 
     try:
         # == Sending response to notion API
-        response = await notion.pages.create(
+        response = notion.pages.create(
             parent={"database_id": database_id},
             properties=markdown_properties,
             children=children_properties,
@@ -62,7 +62,7 @@ async def create_page(
         sys.exit(1)
 
 
-async def create_database(
+def create_database(
     logger: logging.Logger,
     notion: Client,
     database_id: str,
@@ -83,7 +83,7 @@ async def create_database(
 
     try:
         # == Sending response to notion API
-        response = await notion.databases.create(
+        response = notion.databases.create(
             parent={"type": "page_id", "page_id": database_id},
             title=[{"type": "text", "text": {"content": f"{database_name}"}}],
             properties=database_properties,

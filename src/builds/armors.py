@@ -7,9 +7,9 @@ import logging
 from notion_client import Client
 
 
-async def build_armors_database(logger, notion, data_directory, json_file, args):
-    armors_db_id = await armor_db(logger, notion, args.database_id)
-    await armor_page(
+def build_armors_database(logger, notion, data_directory, json_file, args):
+    armors_db_id = armor_db(logger, notion, args.database_id)
+    armor_page(
         logger,
         notion,
         data_directory,
@@ -20,7 +20,7 @@ async def build_armors_database(logger, notion, data_directory, json_file, args)
     )
 
 
-async def armor_page(
+def armor_page(
     logger: logging.Logger,
     notion: Client,
     data_directory: str,
@@ -42,10 +42,6 @@ async def armor_page(
     """
     # == Get equipment Data
     equipment_data = load_data(logger, data_directory, json_file)
-
-    if not isinstance(equipment_data, (list, dict)):
-        logger.error("Loaded data is not a list or dictionary")
-        return
 
     # == Apply range to equipment data
     if end is None or end > len(equipment_data):
@@ -92,7 +88,7 @@ async def armor_page(
 
             # == Sending api call
             # ==========
-            await create_page(
+            create_page(
                 logger,
                 notion,
                 database_id,
@@ -103,7 +99,7 @@ async def armor_page(
             sleep(0.5)
 
 
-async def armor_db(logger: "logging.Logger", notion: "Client", database_id: str) -> str:
+def armor_db(logger: "logging.Logger", notion: "Client", database_id: str) -> str:
     """This generates the api calls needed for Notion. This just builds the empty database page with the required options.
 
     Args:
@@ -145,11 +141,9 @@ async def armor_db(logger: "logging.Logger", notion: "Client", database_id: str)
         "Strength Requirement": {"number": {}},
         "Stealth Disadvantage": {"checkbox": {}},
     }
-    database_id = await create_database(
+    return create_database(
         logger, notion, database_id, database_name, database_armor_properties
     )
-
-    return database_id
 
 
 def build_armor_markdown(equipment: _equipment) -> list:

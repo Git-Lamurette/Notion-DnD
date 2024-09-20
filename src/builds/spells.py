@@ -9,23 +9,22 @@ if TYPE_CHECKING:
     from notion_client import Client
 
 
-async def build_spells_database(logger, notion, data_directory, json_file, args):
+def build_spells_database(logger, notion, data_directory, json_file, args):
     spells_db_id = spells_db(logger, notion, args.database_id)
-    if isinstance(spells_db_id, str):
-        await spells_page(
-            logger,
-            notion,
-            data_directory,
-            json_file,
-            spells_db_id,
-            args.start_range,
-            args.end_range,
-        )
+    spells_page(
+        logger,
+        notion,
+        data_directory,
+        json_file,
+        spells_db_id,
+        args.start_range,
+        args.end_range,
+    )
 
 
-async def spells_page(
-    logger: logging.Logger,
-    notion: Client,
+def spells_page(
+    logger: "logging.Logger",
+    notion: "Client",
     data_directory: str,
     json_file: str,
     database_id: str,
@@ -45,10 +44,6 @@ async def spells_page(
     """
     # == Get spells Data
     spells_data = load_data(logger, data_directory, json_file)
-
-    if not isinstance(spells_data, (list, dict)):
-        logger.error("Loaded data is not a list or dictionary")
-        return
 
     # == Apply range to spells data
     if end is None or end > len(spells_data):
@@ -83,9 +78,7 @@ async def spells_page(
             },
             "School": {
                 "select": {
-                    "name": spells.school.get("name")
-                    if isinstance(spells.school, dict)
-                    else "Unknown School"
+                    "name": spells.school.get("name").capitalize()
                 }
             },
             "Casting Time": {"multi_select": [{"name": spells.casting_time}]},
@@ -155,7 +148,7 @@ async def spells_page(
         )
         # == Sending api call
         # ==========
-        await create_page(
+        create_page(
             logger,
             notion,
             database_id,
@@ -166,7 +159,7 @@ async def spells_page(
         sleep(0.5)
 
 
-async def spells_db(logger: logging.Logger, notion: Client, database_id: str) -> str:
+def spells_db(logger: "logging.Logger", notion: "Client", database_id: str) -> str:
     """This generates the api calls needed for Notion. This just builds the empty database page with the required options.
 
     Args:
@@ -292,15 +285,13 @@ async def spells_db(logger: logging.Logger, notion: Client, database_id: str) ->
         },
     }
 
-    database_id = await create_database(
+    return create_database(
         logger, notion, database_id, database_name, database_spells_properties
     )
 
-    return database_id
-
 
 def build_spells_markdown(
-    spell: _spell, notion: Client, logger: "logging.Logger", database_id: str
+    spell: _spell, notion: "Client", logger: "logging.Logger", database_id: str
 ) -> list:
     from src.builds.children_md import (
         add_paragraph,
@@ -320,7 +311,7 @@ def build_spells_markdown(
     # ==========
     add_section_heading(
         markdown_children,
-        f"{spell.name}" if isinstance(spell.name, str) else "",
+        f"{spell.name}",
         level=1,
     )
 

@@ -48,70 +48,49 @@ import argparse
 
 NAME = "D&D 5E Notion Database Builder"
 VERSION = "0.0.1"
-DATA_DIRECTORY = "src/data"
+DATA_DIRECTORY = "data"
 LOGGING_DIRECTORY = "logs"
 
 
-async def main(args):
+def main(args):
     # == Configure the logger
     logger = configure_logging(LOGGING_DIRECTORY)
     # == Display the initial information
     log_initial_info(logger, args)
     # == Create the Notion client
     notion = Client(auth=args.auth_key)
-    print(type(notion))
-    input("Press Enter to continue...")
     # == Create the reference page - Needed for nested databases
     args.reference_page_id = create_page_under_page(
         logger, notion, args.database_id, "Reference"
     )
 
-    # == Databases contained in the root
-    # ==============================
-    if any(item.lower() in ["creatures", "all"] for item in args.build):
-        build_creature_database(
-            logger, notion, DATA_DIRECTORY, "5e-SRD-Monsters.json", args
-        )
+    # Define a mapping of database names to their corresponding build functions and JSON files
+    database_builders = {
+        "creatures": (build_creature_database, "5e-SRD-Monsters.json"),
+        "weapons": (build_weapons_database, "5e-SRD-Equipment.json"),
+        "armors": (build_armors_database, "5e-SRD-Equipment.json"),
+        "items": (build_items_database, "5e-SRD-Equipment.json"),
+        "magic-items": (build_magic_items_database, "5e-SRD-Magic-Items.json"),
+        "spells": (build_spells_database, "5e-SRD-Spells.json"),
+        "weapon-properties": (build_weapon_properties_database, "5e-SRD-Weapon-Properties.json"),
+        "skills": (build_skills_database, "5e-SRD-Skills.json"),
+        "magic-schools": (build_magic_schools_database, "5e-SRD-Magic-Schools.json"),
+    }
 
-    if any(item.lower() in ["weapons", "all"] for item in args.build):
-        build_weapons_database(
-            logger, notion, DATA_DIRECTORY, "5e-SRD-Equipment.json", args
-        )
-
-    if any(item.lower() in ["armors", "all"] for item in args.build):
-        await build_armors_database(
-            logger, notion, DATA_DIRECTORY, "5e-SRD-Equipment.json", args
-        )
-
-    if any(item in ["items", "all"] for item in args.build):
-        await build_items_database(
-            logger, notion, DATA_DIRECTORY, "5e-SRD-Equipment.json", args
-        )
-
-    if any(item in ["magic-items", "all"] for item in args.build):
-        build_magic_items_database(
-            logger, notion, DATA_DIRECTORY, "5e-SRD-Magic-Items.json", args
-        )
-
-    if any(item in ["spells", "all"] for item in args.build):
-        build_spells_database(
-            logger, notion, DATA_DIRECTORY, "5e-SRD-Spells.json", args
-        )
-
-    if any(item in ["weapon-properties", "all"] for item in args.build):
-        build_weapon_properties_database(
-            logger, notion, DATA_DIRECTORY, "5e-SRD-Spells.json", args
-        )
-
-    if any(item in ["skills", "all"] for item in args.build):
-        build_skills_database(
-            logger, notion, DATA_DIRECTORY, "5e-SRD-Spells.json", args
-        )
-
-    if any(item in ["magic-schools", "all"] for item in args.build):
-        build_magic_schools_database(
-            logger, notion, DATA_DIRECTORY, "5e-SRD-Spells.json", args
-        )
+    # Iterate over the build list and call the corresponding build function
+    for item in args.build:
+        item_lower = item.lower()
+        if item_lower.lower() == "all":
+            # If "all" is specified, build all databases
+            for builder, json_file in database_builders.values():
+                builder(logger, notion, DATA_DIRECTORY, json_file, args)
+            break
+        elif item_lower in database_builders:
+            builder, json_file = database_builders[item_lower]
+            print(f"Building {item} database...")
+            print(f"Using {json_file} as the source file...")
+            print(f"Calling {builder}...")
+            builder(logger, notion, DATA_DIRECTORY, json_file, args)
 
 
 def log_initial_info(logger, args):
@@ -127,7 +106,6 @@ def log_initial_info(logger, args):
     logger.info(f"==  End Range           : {args.end_range}")
     logger.info("==")
     logger.info("=========================================================")
-
 
 if __name__ == "__main__":
     # Argument parsing block

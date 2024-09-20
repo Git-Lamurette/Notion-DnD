@@ -29,10 +29,8 @@ class _spell:
     def get_attack_spell_save(self) -> str:
         if self.attack_type:
             return self.attack_type.capitalize()
-        if isinstance(self.dc, dict) and isinstance(self.dc.get("dc_type"), dict):
-            dc_type = self.dc.get("dc_type", {})
-            if isinstance(dc_type, dict):
-                return f"{dc_type.get('name')} Save"
+        if self.dc:
+            return f"{self.dc['dc_type']['name']} Save"
         return "None"
 
     def get_damage_effect(self) -> str:
@@ -40,12 +38,3 @@ class _spell:
             return f"{self.damage["damage_type"]["name"].capitalize()}"
         else:
             return "None"
-
-    def classes_and_subclasses(self) -> list:
-        classes_and_subclasses = []
-        for cls in (self.classes or []) + (self.subclasses or []):
-            if isinstance(cls, dict) and isinstance(cls.get("name"), str):
-                classes_and_subclasses.append(
-                    {"name": cls.get("name", "").capitalize()}
-                )
-        return classes_and_subclasses

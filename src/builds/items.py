@@ -7,9 +7,9 @@ import logging
 from notion_client import Client
 
 
-async def build_items_database(logger, notion, data_directory, json_file, args):
-    items_db_id = await items_db(logger, notion, args.database_id)
-    await items_page(
+def build_items_database(logger, notion, data_directory, json_file, args):
+    items_db_id = items_db(logger, notion, args.database_id)
+    items_page(
         logger,
         notion,
         data_directory,
@@ -20,7 +20,7 @@ async def build_items_database(logger, notion, data_directory, json_file, args):
     )
 
 
-async def items_page(
+def items_page(
     logger: logging.Logger,
     notion: Client,
     data_directory: str,
@@ -42,10 +42,6 @@ async def items_page(
     """
     # == Get items Data
     items_data = load_data(logger, data_directory, json_file)
-
-    if not isinstance(items_data, (list, dict)):
-        logger.error("Loaded data is not a list or dictionary")
-        return
 
     # == Apply range to items data
     if end is None or end > len(items_data):
@@ -113,7 +109,7 @@ async def items_page(
 
             # == Sending api call
             # ==========
-            await create_page(
+            create_page(
                 logger,
                 notion,
                 database_id,
@@ -124,7 +120,7 @@ async def items_page(
             sleep(0.5)
 
 
-async def items_db(logger: logging.Logger, notion: Client, database_id: str) -> str:
+def items_db(logger: logging.Logger, notion: Client, database_id: str) -> str:
     """This generates the api calls needed for Notion. This just builds the empty database page with the required options.
 
     Args:
@@ -174,7 +170,7 @@ async def items_db(logger: logging.Logger, notion: Client, database_id: str) -> 
         "Cost": {"rich_text": {}},
         "Weight": {"number": {}},
     }
-    database_id = await create_database(
+    database_id = create_database(
         logger, notion, database_id, database_name, database_items_properties
     )
     return database_id
