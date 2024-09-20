@@ -83,15 +83,17 @@ def main(args):
         if item_lower.lower() == "all":
             # If "all" is specified, build all databases
             for builder, json_file in database_builders.values():
+                log_db_build(logger, item, json_file)
                 builder(logger, notion, DATA_DIRECTORY, json_file, args)
             break
         elif item_lower in database_builders:
             builder, json_file = database_builders[item_lower]
-            print(f"Building {item} database...")
-            print(f"Using {json_file} as the source file...")
-            print(f"Calling {builder}...")
+            log_db_build(logger, item, json_file)
             builder(logger, notion, DATA_DIRECTORY, json_file, args)
 
+def log_db_build(logger, item, json_file):
+    logger.info(f"Building {item} database...")
+    logger.info(f"Using {json_file} as the source file...")
 
 def log_initial_info(logger, args):
     logger.info("=========================================================")
