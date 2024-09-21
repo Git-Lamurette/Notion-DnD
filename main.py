@@ -41,7 +41,7 @@ from src.builds.spells import build_spells_database
 from src.builds.weapons_properties import build_weapon_properties_database
 from src.builds.skills import build_skills_database
 from src.builds.magic_schools import build_magic_schools_database
-
+from pprint import pprint
 # from src.utils.get_keys import get_keys
 import argparse
 
@@ -92,8 +92,10 @@ def main(args):
             builder(logger, notion, DATA_DIRECTORY, json_file, args)
 
 def log_db_build(logger, item, json_file):
-    logger.info(f"Building {item} database...")
-    logger.info(f"Using {json_file} as the source file...")
+    logger.info(f"=========================================================")
+    logger.info(f"==  Building {item} database")
+    logger.info(f"==  Using {json_file} as the source file")
+    logger.info(f"=========================================================")
 
 def log_initial_info(logger, args):
     logger.info("=========================================================")
@@ -157,6 +159,15 @@ if __name__ == "__main__":
         required=False,
         default=None,
         help="The end of the range you want to import",
+    )
+
+    parser.add_argument(
+        "-u",
+        "--update",
+        type=str,
+        required=False,
+        default=None,
+        help="The database you want to update - only works with a single options at a time",
     )
 
     # Parse the arguments

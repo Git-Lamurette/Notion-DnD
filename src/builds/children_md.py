@@ -1,3 +1,77 @@
+from notion_client import Client
+import logging
+import re
+
+def add_paragraph_with_mentions(logger: logging.Logger, notion: "Client", markdown_children: list, text: str, keywords, ret = False):
+    from src.api.notion_api import query_notion
+    # Create a regex pattern that matches any of the keywords
+    pattern = '|'.join(map(re.escape, keywords))
+    
+    # Split the text and keep the keywords using parentheses
+    split_text = re.split(f'({pattern})', text)
+    
+    rich_text = []
+
+    
+    filt = {
+        "property": "object",
+        "value": "page"
+    }
+    sort = {
+        "direction": "ascending",
+        "timestamp": "last_edited_time"
+    }
+
+    
+    # Iterate over the split text and apply bold to keywords
+    for part in split_text:
+        if part in keywords:
+            try:
+                id_response = query_notion(logger, notion, part, filt, sort)
+                if id_response:
+                    rich_text.append({
+                        "type": "mention",
+                        "mention": {
+                            "page": {
+                                "id": id_response[0]["id"]
+                            }
+                        },
+                    })
+            finally:
+                    rich_text.append({
+                    "type": "text",
+                    "text": {"content": part},
+                    "annotations": {
+                        "bold": False,
+                        "italic": False,
+                        "strikethrough": False,
+                        "underline": False,
+                        "code": False,
+                        "color": "default",
+                    },
+                })
+        else:
+            # Regular text
+            rich_text.append({
+                "type": "text",
+                "text": {"content": part},
+                "annotations": {
+                    "bold": False,
+                    "italic": False,
+                    "strikethrough": False,
+                    "underline": False,
+                    "code": False,
+                    "color": "default",
+                },
+            })
+    
+    if ret == True:
+        return rich_text
+    
+    markdown_children.append(
+        {"object": "block", "type": "paragraph", "paragraph": {"rich_text": rich_text}}
+    )
+
 def add_paragraph(markdown_children: list, text: str, bold=False) -> None:
     """Make a markdown paragraph
 
@@ -55,6 +129,48 @@ def add_paragraph(markdown_children: list, text: str, bold=False) -> None:
         {"object": "block", "type": "paragraph", "paragraph": {"rich_text": rich_text}}
     )
 
+
+def add_mention(logger: logging.Logger, notion: "Client", markdown_children: list, page_name: str) -> None:
+    """Add a mention of another page
+
+    Args:
+        notion (Client): The Notion client
+        markdown_children (list): Your markdown list that contains all elements so far
+        page_name (str): The name of the page to mention
+    """
+    from src.api.notion_api import query_notion
+
+    query = "Backpack"
+    filter = {
+        "property": "object",
+        "value": "page"
+    }
+    sort = {
+        "direction": "ascending",
+        "timestamp": "last_edited_time"
+    }
+
+    mentioned_page_id = query_notion(logger, notion, query, filter, sort)[0]["id"]
+
+    
+    content = {
+        "object": "block",
+        "type": "paragraph",
+        "paragraph": {
+            "rich_text": [
+                {
+                    "type": "mention",
+                    "mention": {
+                        "page": {
+                            "id": mentioned_page_id
+                        }
+                    },
+                },
+            ]
+        }
+    }
+
+    markdown_children.append(content)
 
 def add_section_heading(markdown_children: list, text: str, level: int = 2) -> None:
     """Add a heading
@@ -121,7 +237,7 @@ def add_table(markdown_children: list, headers: list, rows: list = []) -> None:
         Headers = ["Item 1", "Item 2", "Item 3"]
         Rows = [
             ["Data 1", "Data 2", "Data 3"],
-            ["Data 4", "Data 5", "Data 6"],
+            [["type": "text", "text": {"content": "Data 4"}], ...],
         ]
 
     Args:
@@ -145,18 +261,26 @@ def add_table(markdown_children: list, headers: list, rows: list = []) -> None:
     # Construct data rows if provided
     data_rows = []
     if rows:
-        data_rows = [
-            {
+        for row in rows:
+            data_row = {
                 "object": "block",
                 "type": "table_row",
                 "table_row": {
-                    "cells": [
-                        [{"type": "text", "text": {"content": cell}}] for cell in row
-                    ]
+                    "cells": []
                 },
             }
-            for row in rows
-        ]
+            for cell in row:
+                if isinstance(cell, str):
+                    # Handle plain string
+                    data_row["table_row"]["cells"].append(
+                        [{"type": "text", "text": {"content": cell}}]
+                    )
+                elif isinstance(cell, list):
+                    # Handle rich text object
+                    data_row["table_row"]["cells"].append(cell)
+                else:
+                    raise ValueError("Unsupported cell content type")
+            data_rows.append(data_row)
 
     # Construct the full table block
     table = {

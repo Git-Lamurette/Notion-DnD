@@ -107,8 +107,9 @@ def spells_page(
             "Concentration": {"checkbox": spells.concentration},
             "Ritual": {"checkbox": spells.ritual},
             "Classes and Subclasses": {
-                "multi_select": [
-                    {"name": cls} for cls in spells.classes_and_subclasses()
+               "multi_select": [
+                    {"name": cls["name"].capitalize()}
+                    for cls in spells.classes + spells.subclasses
                 ]
             },
         }

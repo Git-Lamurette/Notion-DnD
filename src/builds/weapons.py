@@ -1,3 +1,4 @@
+from src.builds.children_md import add_mention
 from src.classes.equipment_class import _equipment
 from src.utils.load_json import load_data
 from src.api.notion_api import create_page, create_database
@@ -138,7 +139,7 @@ def weapons_page(
             children_properties = []
 
             # == Building markdown for equipment
-            children_properties = build_weapon_markdown(equipment)
+            children_properties = build_weapon_markdown(logger, notion, equipment)
 
             # == Sending api call
             # ==========
@@ -236,12 +237,13 @@ def weapons_db(logger: "logging.Logger", notion: "client", database_id: str) -> 
     )
 
 
-def build_weapon_markdown(equipment: object) -> list:
+def build_weapon_markdown(logger: "logging.Logger", notion: "client", equipment: object) -> list:
     from src.builds.children_md import (
         add_paragraph,
         add_section_heading,
         add_table,
         add_divider,
+        add_paragraph_with_mentions,
     )
     # == This is all of the building of the api call for
     # == the markdown body
@@ -270,15 +272,24 @@ def build_weapon_markdown(equipment: object) -> list:
 
     # == Attributes
     # ==========
+    text_string = f"{" ".join(prop for prop in equipment.get_properties())}"
+    rich_text = add_paragraph_with_mentions(logger, notion, markdown_children, text_string, ["Finesse", "Heavy", "Light", "Thrown", "Two-Handed", "Versatile"], ret = True)
+
     stats_table_headers = ["Name", "Cost", "Damage", "Weight", "Properties", "Range"]
     stats_table_row = [
         f"{equipment.name}",
         f"{equipment.cost['quantity']} {equipment.cost['unit']}",
         f"{equipment.get_damage_dice()}",
         f"{equipment.weight} lbs",
-        f"{" - ".join(prop for prop in equipment.get_properties())}",
+        rich_text,
         f"{equipment.get_range()}",
     ]
+
+    print (rich_text)
     add_table(markdown_children, stats_table_headers, [stats_table_row])
 
+    add_mention(logger, notion, markdown_children, "Backpack")
+
+    add_paragraph_with_mentions(logger, notion, markdown_children, "I love pickle because Backpack are good", ["pickle"])
+    
     return markdown_children
