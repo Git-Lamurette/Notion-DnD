@@ -72,6 +72,7 @@ def items_page(
                         }
                     ]
                 },
+                "5E Category": {"select": {"name": "Items"}},
                 "URL": {
                     "url": f"https://www.dndbeyond.com/equipment/{items.index.split("-")[0].strip()}"
                 },
@@ -139,6 +140,7 @@ def items_db(logger: logging.Logger, notion: Client, database_id: str) -> str:
     database_items_properties = {
         "Name": {"title": {}},
         "URL": {"url": {}},
+        "5E Category": {"select": {"options": [{"name": "Items", "color": "green"}]}},
         "Category": {
             "select": {
                 "options": [

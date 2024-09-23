@@ -70,6 +70,7 @@ def magic_items_page(
                     }
                 ]
             },
+            "5E Category": {"select": {"name": "Magic Items"}},
             "URL": {
                 "url": f"https://www.dndbeyond.com/magic-items/{magic_items.index}"
             },
@@ -135,6 +136,9 @@ def magic_items_db(logger: "logging.Logger", notion: "client", database_id: str)
     database_magic_items_properties = {
         "Name": {"title": {}},
         "URL": {"url": {}},
+        "5E Category": {
+            "select": {"options": [{"name": "Magic Items", "color": "green"}]}
+        },
         "Rarity": {
             "select": {
                 "options": [

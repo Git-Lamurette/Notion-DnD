@@ -29,7 +29,6 @@ def magic_schools_page(
     database_id: str,
     start: int,
     end: Union[None, int],
-    
 ) -> None:
     """This generates the api calls needed for Notion. This parses the JSON and build the markdown body for the API call.
     It iterates through each magic_schools in the json depending on params.
@@ -67,6 +66,7 @@ def magic_schools_page(
                     }
                 ]
             },
+            "5E Category": {"select": {"name": "Magic Schools"}},
             "Description": {
                 "rich_text": [
                     {
@@ -113,6 +113,9 @@ def magic_schools_db(
     database_weapon_properties = {
         "Name": {"title": {}},
         "Description": {"rich_text": {}},
+        "5E Category": {
+            "select": {"options": [{"name": "Magic Schools", "color": "green"}]}
+        },
     }
 
     return create_database(

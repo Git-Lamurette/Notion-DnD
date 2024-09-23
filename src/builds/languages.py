@@ -8,17 +8,30 @@ if TYPE_CHECKING:
     from notion_client import client
 
 
-def languages_page(
+def build_languages_database(logger, notion, data_directory, json_file, args):
+    languages_prop_db = languages_properties_db(logger, notion, args.reference_page_id)
+    languages_properties_page(
+        logger,
+        notion,
+        data_directory,
+        json_file,
+        languages_prop_db,
+        args.start_range,
+        args.end_range,
+    )
+
+
+def languages_properties_page(
     logger: "logging.Logger",
     notion: "client",
     data_directory: str,
+    json_file: str,
     database_id: str,
     start: int,
     end: Union[None, int],
-    json_file: str,
 ) -> None:
     """This generates the api calls needed for Notion. This parses the JSON and build the markdown body for the API call.
-    It iterates through each languages in the json depending on params.
+    It iterates through each weapon properties in the json depending on params.
 
     Args:
         logger (logging.Logger): Logging object
@@ -28,48 +41,47 @@ def languages_page(
         start (int): If you want to only capture a range specify the start
         end (Union[None, int]): If you want to only capture a range specify the end
     """
-    # == Get languages Data
+    # == Get weapon properties Data
     languages_data = load_data(logger, data_directory, json_file)
 
-    # == Apply range to languages data
+    # == Apply range to weapon properties data
     if end is None or end > len(languages_data):
         end = len(languages_data)
 
-    # == Iterates through the specified range of the languages JSON
+    # == Iterates through the specified range of the weapon properties JSON
     for index in range(start, end):
-        selected_language = languages_data[index]
+        selected_prop = languages_data[index]
 
         logger.info(
-            f"Building Markdown for languages -- {selected_language['name']} -- Index -- {index} --"
+            f"Building Markdown for weapon properties -- {selected_prop['name']} -- Index -- {index} --"
         )
 
-        # == Building markdown properties from _languages class
+        # == Building markdown properties from languages properties class
         markdown_properties = {
             "Name": {
                 "title": [
                     {
                         "type": "text",
-                        "text": {"content": selected_language["name"]},
+                        "text": {"content": selected_prop["name"]},
                     }
                 ]
             },
-            "Description": {
-                "rich_text": [
-                    {
-                        "type": "text",
-                        "text": {
-                            "content": "".join(mn for mn in selected_language["desc"])
-                        },
-                    }
+            "5E Category": {"select": {"name": "Languages"}},
+            "Type": {"select": {"name": selected_prop.get("type", "")}},
+            "Typical Speakers": {
+                "multi_select": [
+                    {"name": speaker.capitalize()}
+                    for speaker in selected_prop["typical_speakers"]
                 ]
             },
+            "Script": {"select": {"name": selected_prop.get("script", " ")}},
         }
 
         # == Ensure children_properties list is empty
         children_properties = []
 
-        # == Building markdown for languages
-        children_properties = build_languages_markdown(selected_language)
+        # == Building markdown for weapon properties
+        children_properties = build_languages_properties_markdown(selected_prop)
 
         # == Sending api call
         # ==========
@@ -80,7 +92,9 @@ def languages_page(
         sleep(0.5)
 
 
-def languages_db(logger: "logging.Logger", notion: "client", database_id: str) -> str:
+def languages_properties_db(
+    logger: "logging.Logger", notion: "client", database_id: str
+) -> str:
     """This generates the api calls needed for Notion. This just builds the empty database page with the required options.
 
     Args:
@@ -93,21 +107,68 @@ def languages_db(logger: "logging.Logger", notion: "client", database_id: str) -
     """
 
     # == Database Name
-    database_name = "languages"
+    database_name = "Languages"
 
     # == Building markdown database properties
-    database_weapon_properties = {
+    database_languages = {
         "Name": {"title": {}},
-        "Description": {"rich_text": {}},
+        "5E Category": {
+            "select": {"options": [{"name": "Languages", "color": "green"}]}
+        },
+        "Type": {
+            "select": {
+                "options": [
+                    {"name": "Standard", "color": "green"},
+                    {"name": "Exotic", "color": "purple"},
+                ]
+            }
+        },
+        "Typical Speakers": {
+            "multi_select": {
+                "options": [
+                    {"name": "Humans", "color": "blue"},
+                    {"name": "Dwarves", "color": "brown"},
+                    {"name": "Elves", "color": "pink"},
+                    {"name": "Ogres", "color": "orange"},
+                    {"name": "Giants", "color": "red"},
+                    {"name": "Gnomes", "color": "yellow"},
+                    {"name": "Goblinoids", "color": "gray"},
+                    {"name": "Halflings", "color": "purple"},
+                    {"name": "Orcs", "color": "gray"},
+                    {"name": "Demons", "color": "red"},
+                    {"name": "Celestials", "color": "yellow"},
+                    {"name": "Dragons", "color": "green"},
+                    {"name": "Dragonborn", "color": "blue"},
+                    {"name": "Aboleths", "color": "red"},
+                    {"name": "Cloakers", "color": "gray"},
+                    {"name": "Devils", "color": "red"},
+                    {"name": "Elementals", "color": "orange"},
+                    {"name": "Fey creatures", "color": "pink"},
+                    {"name": "Underdark traders", "color": "gray"},
+                ]
+            }
+        },
+        "Script": {
+            "select": {
+                "options": [
+                    {"name": "Common", "color": "blue"},
+                    {"name": "Dwarvish", "color": "brown"},
+                    {"name": "Elvish", "color": "pink"},
+                    {"name": "Infernal", "color": "red"},
+                    {"name": "Draconic", "color": "green"},
+                    {"name": "Celestial", "color": "yellow"},
+                ]
+            }
+        },
     }
 
     return create_database(
-        logger, notion, database_id, database_name, database_weapon_properties
+        logger, notion, database_id, database_name, database_languages
     )
 
 
-def build_languages_markdown(languages_data: object) -> list:
-    from src.markdown.children_md import (
+def build_languages_properties_markdown(languages_data: object) -> list:
+    from src.builds.children_md import (
         add_paragraph,
         add_section_heading,
         add_divider,
@@ -124,6 +185,9 @@ def build_languages_markdown(languages_data: object) -> list:
     # ==========
     add_section_heading(markdown_children, f"{languages_data['name']}", level=1)
     add_divider(markdown_children)
-    add_paragraph(markdown_children, "".join(desc for desc in languages_data["desc"]))
+    if languages_data.get("desc"):
+        add_paragraph(markdown_children, f"{languages_data["desc"]}")
+    else:
+        add_paragraph(markdown_children, "No description available")
 
     return markdown_children

@@ -1,136 +1,183 @@
 from notion_client import Client
-import logging
 import re
+from typing import Union
 
-def add_paragraph_with_mentions(logger: logging.Logger, notion: "Client", markdown_children: list, text: str, keywords, ret = False):
-    from src.api.notion_api import query_notion
-    # Create a regex pattern that matches any of the keywords
-    pattern = '|'.join(map(re.escape, keywords))
-    
-    # Split the text and keep the keywords using parentheses
-    split_text = re.split(f'({pattern})', text)
-    
-    rich_text = []
 
-    
-    filt = {
-        "property": "object",
-        "value": "page"
-    }
-    sort = {
-        "direction": "ascending",
-        "timestamp": "last_edited_time"
-    }
-
-    
-    # Iterate over the split text and apply bold to keywords
-    for part in split_text:
-        if part in keywords:
-            try:
-                id_response = query_notion(logger, notion, part, filt, sort)
-                if id_response:
-                    rich_text.append({
-                        "type": "mention",
-                        "mention": {
-                            "page": {
-                                "id": id_response[0]["id"]
-                            }
-                        },
-                    })
-            finally:
-                    rich_text.append({
-                    "type": "text",
-                    "text": {"content": part},
-                    "annotations": {
-                        "bold": False,
-                        "italic": False,
-                        "strikethrough": False,
-                        "underline": False,
-                        "code": False,
-                        "color": "default",
-                    },
-                })
-        else:
-            # Regular text
-            rich_text.append({
-                "type": "text",
-                "text": {"content": part},
-                "annotations": {
-                    "bold": False,
-                    "italic": False,
-                    "strikethrough": False,
-                    "underline": False,
-                    "code": False,
-                    "color": "default",
-                },
-            })
-    
-    if ret == True:
-        return rich_text
-    
-    markdown_children.append(
-        {"object": "block", "type": "paragraph", "paragraph": {"rich_text": rich_text}}
-    )
-
-def add_paragraph(markdown_children: list, text: str, bold=False) -> None:
-    """Make a markdown paragraph
+def add_paragraph_with_mentions(
+    logger,
+    notion: Client,
+    markdown_children: list,
+    text: str,
+    mention_keywords: list,
+    database_name: str,
+    ret=False,
+) -> Union[None, list]:
+    """Add a paragraph with mentions of specific keywords
 
     Args:
-        markdown_children (list): You markdown list that contain all elements so far
-        text (str): The content for the paragraph
+        logger (logging.Logger): Logging object
+        notion (Client): The Notion client
+        markdown_children (list): Your markdown list that contains all elements so far
+        text (str): The text content for the paragraph
+        mention_keywords (list): List of keywords to mention
+        ret (bool): Whether to return the rich_text list
+
+    Returns:
+        Union[None, list]: The rich_text list if ret is True, otherwise None
     """
-    import re
 
-    # == Regular expression to find bold text
-    bold_pattern = re.compile(r"\*\*\*(.*?)\*\*\*")
+    # Create a regex pattern that matches any of the keywords
+    pattern = "|".join(map(re.escape, mention_keywords))
 
-    # Split the text by the bold pattern
-    split_text = bold_pattern.split(text)
+    # Split the text and keep the keywords using parentheses
+    split_text = re.split(f"({pattern})", text)
 
-    # Initialize the rich_text list
     rich_text = []
 
-    for index, part in enumerate(split_text):
-        if index % 2 == 0:
-            # Regular text
+    for word in split_text:
+        if word in mention_keywords:
+            # Define the filter for the search query
+            filt = {"value": "page", "property": "object"}
+            # logger.info(f"Filter: {filt}")
+            # Search for the page to mention
+            results = notion.search(query=word, filter=filt).get("results")
+            # logger.info(f"Results: {results}")
+            if len(results) == 0:
+                rich_text.append({"type": "text", "text": {"content": word}})
+            else:
+                # Filter results to match the "5E Category" property
+                filtered_results = [
+                    result
+                    for result in results
+                    if result.get("properties", {})
+                    .get("5E Category", {})
+                    .get("select", {})
+                    .get("name")
+                    == f"{database_name}"
+                ]
+                if len(filtered_results) == 0:
+                    rich_text.append({"type": "text", "text": {"content": word}})
+                else:
+                    mentioned_page_id = filtered_results[0]["id"]
+                    rich_text.append(
+                        {
+                            "type": "mention",
+                            "mention": {"page": {"id": mentioned_page_id}},
+                        }
+                    )
+        else:
+            rich_text.append({"type": "text", "text": {"content": word}})
+
+    paragraph_content = {
+        "object": "block",
+        "type": "paragraph",
+        "paragraph": {"rich_text": rich_text},
+    }
+
+    if ret:
+        return rich_text
+
+    markdown_children.append(paragraph_content)
+
+    return None
+
+
+def add_paragraph(markdown_children: list, text: str) -> None:
+    """Add a paragraph to the markdown children list with formatting checks.
+
+    Args:
+        markdown_children (list): The list of markdown elements.
+        text (str): The text content for the paragraph.
+    """
+    # Check for headings with ## this is a title
+    heading_pattern_4 = re.compile(r"##### (.*)")
+    heading_pattern_3 = re.compile(r"#### (.*)")
+    heading_pattern_2 = re.compile(r"### (.*)")
+    heading_pattern_1 = re.compile(r"## (.*)")
+
+    if heading_pattern_3.match(text) or heading_pattern_4.match(text):
+        heading_text = heading_pattern_3.sub(r"\1", text)
+        markdown_children.append(
+            {
+                "object": "block",
+                "type": "heading_3",
+                "heading_3": {
+                    "rich_text": [{"type": "text", "text": {"content": heading_text}}]
+                },
+            }
+        )
+        return
+
+    if heading_pattern_2.match(text):
+        heading_text = heading_pattern_2.sub(r"\1", text)
+        markdown_children.append(
+            {
+                "object": "block",
+                "type": "heading_2",
+                "heading_2": {
+                    "rich_text": [{"type": "text", "text": {"content": heading_text}}]
+                },
+            }
+        )
+        return
+
+    if heading_pattern_1.match(text):
+        heading_text = heading_pattern_1.sub(r"\1", text)
+        markdown_children.append(
+            {
+                "object": "block",
+                "type": "heading_1",
+                "heading_1": {
+                    "rich_text": [{"type": "text", "text": {"content": heading_text}}]
+                },
+            }
+        )
+        return
+
+    # Check for bold italic formatting with ***word***
+    bold_italic_pattern = re.compile(r"\*\*\*(.*?)\*\*\*")
+    text = bold_italic_pattern.sub(r"<strong><em>\1</em></strong>", text)
+
+    # Check for bold formatting with **word**
+    bold_pattern = re.compile(r"\*\*(.*?)\*\*")
+    text = bold_pattern.sub(r"<strong>\1</strong>", text)
+
+    # Split text into parts to handle formatting
+    parts = re.split(r"(<strong><em>.*?</em></strong>|<strong>.*?</strong>)", text)
+
+    rich_text = []
+
+    for part in parts:
+        if part.startswith("<strong><em>") and part.endswith("</em></strong>"):
+            content = part[13:-14]
             rich_text.append(
                 {
                     "type": "text",
-                    "text": {"content": part},
-                    "annotations": {
-                        "bold": bold,
-                        "italic": False,
-                        "strikethrough": False,
-                        "underline": False,
-                        "code": False,
-                        "color": "default",
-                    },
+                    "text": {"content": content},
+                    "annotations": {"bold": True, "italic": True},
+                }
+            )
+        elif part.startswith("<strong>") and part.endswith("</strong>"):
+            content = part[8:-9]
+            rich_text.append(
+                {
+                    "type": "text",
+                    "text": {"content": content},
+                    "annotations": {"bold": True},
                 }
             )
         else:
-            # Bold text
-            rich_text.append(
-                {
-                    "type": "text",
-                    "text": {"content": part},
-                    "annotations": {
-                        "bold": True,
-                        "italic": False,
-                        "strikethrough": False,
-                        "underline": False,
-                        "code": False,
-                        "color": "default",
-                    },
-                }
-            )
+            rich_text.append({"type": "text", "text": {"content": part}})
 
-    # Append the paragraph block with the rich_text list
     markdown_children.append(
         {"object": "block", "type": "paragraph", "paragraph": {"rich_text": rich_text}}
     )
 
 
-def add_mention(logger: logging.Logger, notion: "Client", markdown_children: list, page_name: str) -> None:
+'''
+def add_mention(
+    logger: logging.Logger, notion: "Client", markdown_children: list, page_name: str
+) -> None:
     """Add a mention of another page
 
     Args:
@@ -141,18 +188,11 @@ def add_mention(logger: logging.Logger, notion: "Client", markdown_children: lis
     from src.api.notion_api import query_notion
 
     query = "Backpack"
-    filter = {
-        "property": "object",
-        "value": "page"
-    }
-    sort = {
-        "direction": "ascending",
-        "timestamp": "last_edited_time"
-    }
+    filter = {"property": "object", "value": "page"}
+    sort = {"direction": "ascending", "timestamp": "last_edited_time"}
 
     mentioned_page_id = query_notion(logger, notion, query, filter, sort)[0]["id"]
 
-    
     content = {
         "object": "block",
         "type": "paragraph",
@@ -160,17 +200,15 @@ def add_mention(logger: logging.Logger, notion: "Client", markdown_children: lis
             "rich_text": [
                 {
                     "type": "mention",
-                    "mention": {
-                        "page": {
-                            "id": mentioned_page_id
-                        }
-                    },
+                    "mention": {"page": {"id": mentioned_page_id}},
                 },
             ]
-        }
+        },
     }
 
     markdown_children.append(content)
+'''
+
 
 def add_section_heading(markdown_children: list, text: str, level: int = 2) -> None:
     """Add a heading
@@ -265,9 +303,7 @@ def add_table(markdown_children: list, headers: list, rows: list = []) -> None:
             data_row = {
                 "object": "block",
                 "type": "table_row",
-                "table_row": {
-                    "cells": []
-                },
+                "table_row": {"cells": []},
             }
             for cell in row:
                 if isinstance(cell, str):

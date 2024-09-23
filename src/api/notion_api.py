@@ -4,6 +4,7 @@ from time import sleep
 import logging
 from notion_client import Client
 
+'''
 def query_notion(
     logger: logging.Logger,
     notion: Client,
@@ -11,13 +12,11 @@ def query_notion(
     filter: dict = None,
     sort: dict = None,
     page_size: int = 100,
-    exact_case: bool = True,
-    
+    exact_case: bool = False,
 ) -> list:
     """Query the Notion API and return results.
     Example:
-
-        results = query_notion(logger, notion, query, filter, sort)
+        results = query_notion(logger, notion, query, filter, sort, exact_case=True)
     """
     results = []
     start_cursor = None
@@ -28,7 +27,7 @@ def query_notion(
                 filter=filter,
                 sort=sort,
                 start_cursor=start_cursor,
-                page_size=page_size
+                page_size=page_size,
             )
             results.extend(response.get("results", []))
             start_cursor = response.get("next_cursor")
@@ -42,13 +41,19 @@ def query_notion(
             else:
                 print(f"Error querying Notion API: {e}")
             break
-    """
+
     if exact_case:
         # Use a generator expression to find the first result that matches the exact case
-        result = next((result for result in results if result.get("title", "").strip() == query), None)
+        result = next(
+            (result for result in results if result.get("title", "").strip() == query),
+            None,
+        )
         return [result] if result else []
-    """
+
     return results
+
+'''
+
 
 def create_page_under_page(
     logger: logging.Logger,
@@ -100,6 +105,8 @@ def create_page(
         logger.info(f"Page created with ID: {response['id']}")
 
         sleep(0.5)
+
+        return response["id"]
 
     except APIResponseError as e:
         logger.error(f"Response status: {e.status}")

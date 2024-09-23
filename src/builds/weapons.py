@@ -1,4 +1,3 @@
-from src.builds.children_md import add_mention
 from src.classes.equipment_class import _equipment
 from src.utils.load_json import load_data
 from src.api.notion_api import create_page, create_database
@@ -72,6 +71,7 @@ def weapons_page(
                         }
                     ]
                 },
+                "5E Category": {"select": {"name": "Weapons"}},
                 "URL": {
                     "url": f"https://www.dndbeyond.com/equipment/{equipment.index}"
                 },
@@ -184,6 +184,7 @@ def weapons_db(logger: "logging.Logger", notion: "client", database_id: str) -> 
                 ]
             }
         },
+        "5E Category": {"select": {"options": [{"name": "Weapons", "color": "green"}]}},
         "Cost": {"rich_text": {}},
         "Range": {"rich_text": {}},
         "Range - Thrown": {"rich_text": {}},
@@ -237,7 +238,9 @@ def weapons_db(logger: "logging.Logger", notion: "client", database_id: str) -> 
     )
 
 
-def build_weapon_markdown(logger: "logging.Logger", notion: "client", equipment: object) -> list:
+def build_weapon_markdown(
+    logger: "logging.Logger", notion: "client", equipment: object
+) -> list:
     from src.builds.children_md import (
         add_paragraph,
         add_section_heading,
@@ -272,10 +275,23 @@ def build_weapon_markdown(logger: "logging.Logger", notion: "client", equipment:
 
     # == Attributes
     # ==========
-    text_string = f"{" ".join(prop for prop in equipment.get_properties())}"
-    rich_text = add_paragraph_with_mentions(logger, notion, markdown_children, text_string, ["Finesse", "Heavy", "Light", "Thrown", "Two-Handed", "Versatile"], ret = True)
 
+    # == Need to capture the rich text to then add into the table structure
     stats_table_headers = ["Name", "Cost", "Damage", "Weight", "Properties", "Range"]
+
+    # == Make the string for the values
+    text_string = f"{" ".join(prop for prop in equipment.get_properties())}"
+
+    rich_text = add_paragraph_with_mentions(
+        logger,
+        notion,
+        markdown_children,
+        text_string,
+        [text_string],
+        "Weapon Properties",
+        ret=True,
+    )
+
     stats_table_row = [
         f"{equipment.name}",
         f"{equipment.cost['quantity']} {equipment.cost['unit']}",
@@ -285,11 +301,6 @@ def build_weapon_markdown(logger: "logging.Logger", notion: "client", equipment:
         f"{equipment.get_range()}",
     ]
 
-    print (rich_text)
     add_table(markdown_children, stats_table_headers, [stats_table_row])
 
-    add_mention(logger, notion, markdown_children, "Backpack")
-
-    add_paragraph_with_mentions(logger, notion, markdown_children, "I love pickle because Backpack are good", ["pickle"])
-    
     return markdown_children

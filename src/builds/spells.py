@@ -70,17 +70,14 @@ def spells_page(
                     }
                 ]
             },
+            "5E Category": {"select": {"name": "Spells"}},
             "URL": {"url": f"https://www.dndbeyond.com/spells/{spells.index}"},
             "Level": {
                 "select": {
                     "name": str(spells.level) if spells.level != 0 else "Cantrip"
                 }
             },
-            "School": {
-                "select": {
-                    "name": spells.school.get("name").capitalize()
-                }
-            },
+            "School": {"select": {"name": spells.school.get("name").capitalize()}},
             "Casting Time": {"multi_select": [{"name": spells.casting_time}]},
             "Range": {
                 "rich_text": [
@@ -107,7 +104,7 @@ def spells_page(
             "Concentration": {"checkbox": spells.concentration},
             "Ritual": {"checkbox": spells.ritual},
             "Classes and Subclasses": {
-               "multi_select": [
+                "multi_select": [
                     {"name": cls["name"].capitalize()}
                     for cls in spells.classes + spells.subclasses
                 ]
@@ -180,6 +177,7 @@ def spells_db(logger: "logging.Logger", notion: "Client", database_id: str) -> s
         "Name": {"title": {}},
         "Range": {"rich_text": {}},
         "URL": {"url": {}},
+        "5E Category": {"select": {"options": [{"name": "Spells", "color": "green"}]}},
         "Components": {
             "multi_select": {
                 "options": [

@@ -65,6 +65,7 @@ def armor_page(
                 "URL": {
                     "url": f"https://www.dndbeyond.com/equipment/{equipment.index.strip("-armor")}"
                 },
+                "5E Category": {"select": {"name": "Armors"}},
                 "Category": {"select": {"name": equipment.equipment_category["name"]}},
                 "Cost": {"rich_text": [{"text": {"content": equipment.get_cost()}}]},
                 "Weight": {
@@ -118,6 +119,7 @@ def armor_db(logger: "logging.Logger", notion: "Client", database_id: str) -> st
     database_armor_properties = {
         "Name": {"title": {}},
         "URL": {"url": {}},
+        "5E Category": {"select": {"options": [{"name": "Armors", "color": "green"}]}},
         "Category": {
             "select": {
                 "options": [

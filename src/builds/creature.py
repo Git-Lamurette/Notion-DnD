@@ -78,6 +78,7 @@ def creature_page(
             "Movement Type": {
                 "multi_select": [{"name": mt.capitalize()} for mt in monster.speed]
             },
+            "5E Category": {"select": {"name": "Creatures"}},
         }
 
         # == Ensure children list is empty
@@ -113,6 +114,9 @@ def creature_db(logger: "logging.Logger", notion: "client", database_id: str) ->
     database_properties = {
         "Name": {"title": {}},
         "URL": {"url": {}},
+        "5E Category": {
+            "select": {"options": [{"name": "Creatures", "color": "green"}]}
+        },
         "Size": {
             "select": {
                 "options": [

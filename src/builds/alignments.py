@@ -8,20 +8,22 @@ if TYPE_CHECKING:
     from notion_client import client
 
 
-def build_skills_database(logger, notion, data_directory, json_file, args):
-    skills_db_id = skills_db(logger, notion, args.reference_page_id)
-    skills_page(
+def build_alignments_database(logger, notion, data_directory, json_file, args):
+    alignments_prop_db = alignments_properties_db(
+        logger, notion, args.reference_page_id
+    )
+    alignments_properties_page(
         logger,
         notion,
         data_directory,
         json_file,
-        skills_db_id,
+        alignments_prop_db,
         args.start_range,
         args.end_range,
     )
 
 
-def skills_page(
+def alignments_properties_page(
     logger: "logging.Logger",
     notion: "client",
     data_directory: str,
@@ -31,7 +33,7 @@ def skills_page(
     end: Union[None, int],
 ) -> None:
     """This generates the api calls needed for Notion. This parses the JSON and build the markdown body for the API call.
-    It iterates through each skills in the json depending on params.
+    It iterates through each weapon properties in the json depending on params.
 
     Args:
         logger (logging.Logger): Logging object
@@ -41,43 +43,38 @@ def skills_page(
         start (int): If you want to only capture a range specify the start
         end (Union[None, int]): If you want to only capture a range specify the end
     """
-    # == Get skills Data
-    skills_data = load_data(logger, data_directory, json_file)
+    # == Get weapon properties Data
+    alignments_properties_data = load_data(logger, data_directory, json_file)
 
-    # == Apply range to skills data
-    if end is None or end > len(skills_data):
-        end = len(skills_data)
+    # == Apply range to weapon properties data
+    if end is None or end > len(alignments_properties_data):
+        end = len(alignments_properties_data)
 
-    # == Iterates through the specified range of the skills JSON
+    # == Iterates through the specified range of the weapon properties JSON
     for index in range(start, end):
-        selected_skill = skills_data[index]
+        selected_prop = alignments_properties_data[index]
 
         logger.info(
-            f"Building Markdown for skills -- {selected_skill['name']} -- Index -- {index} --"
+            f"Building Markdown for weapon properties -- {selected_prop['name']} -- Index -- {index} --"
         )
 
-        # == Building markdown properties from _skills class
+        # == Building markdown properties from _weapon properties class
         markdown_properties = {
             "Name": {
                 "title": [
                     {
                         "type": "text",
-                        "text": {"content": selected_skill["name"]},
+                        "text": {"content": selected_prop["name"]},
                     }
                 ]
             },
-            "5E Category": {"select": {"name": "Skills"}},
-            "Ability Score": {
-                "select": {
-                    "name": selected_skill.get("ability_score", {}).get("name", " ")
-                }
-            },
+            "5E Category": {"select": {"name": "Alignments"}},
             "Description": {
                 "rich_text": [
                     {
                         "type": "text",
                         "text": {
-                            "content": "".join(mn for mn in selected_skill["desc"])
+                            "content": "".join(mn for mn in selected_prop["desc"])
                         },
                     }
                 ]
@@ -87,8 +84,8 @@ def skills_page(
         # == Ensure children_properties list is empty
         children_properties = []
 
-        # == Building markdown for skills
-        children_properties = build_skills_markdown(selected_skill)
+        # == Building markdown for weapon properties
+        children_properties = build_alignments_properties_markdown(selected_prop)
 
         # == Sending api call
         # ==========
@@ -99,7 +96,9 @@ def skills_page(
         sleep(0.5)
 
 
-def skills_db(logger: "logging.Logger", notion: "client", database_id: str) -> str:
+def alignments_properties_db(
+    logger: "logging.Logger", notion: "client", database_id: str
+) -> str:
     """This generates the api calls needed for Notion. This just builds the empty database page with the required options.
 
     Args:
@@ -112,33 +111,29 @@ def skills_db(logger: "logging.Logger", notion: "client", database_id: str) -> s
     """
 
     # == Database Name
-    database_name = "Skills"
+    database_name = "Alignments"
 
     # == Building markdown database properties
-    database_weapon_properties = {
+    database_alignments = {
         "Name": {"title": {}},
         "Description": {"rich_text": {}},
-        "Ability Score": {
+        "5E Category": {
             "select": {
                 "options": [
-                    {"name": "INT", "color": "gray"},
-                    {"name": "DEX", "color": "blue"},
-                    {"name": "STR", "color": "red"},
-                    {"name": "CHA", "color": "pink"},
-                    {"name": "CON", "color": "purple"},
-                    {"name": "WIS", "color": "brown"},
+                    {"name": "Alignments", "color": "blue"},
                 ]
             }
         },
-        "5E Category": {"select": {"options": [{"name": "Skills", "color": "green"}]}},
     }
 
     return create_database(
-        logger, notion, database_id, database_name, database_weapon_properties
+        logger, notion, database_id, database_name, database_alignments
     )
 
 
-def build_skills_markdown(skills_data: object) -> list:
+def build_alignments_properties_markdown(
+    alignments_properties_data: object,
+) -> list:
     from src.builds.children_md import (
         add_paragraph,
         add_section_heading,
@@ -154,8 +149,10 @@ def build_skills_markdown(skills_data: object) -> list:
 
     # == Adding header at the top
     # ==========
-    add_section_heading(markdown_children, f"{skills_data['name']}", level=1)
+    add_section_heading(
+        markdown_children, f"{alignments_properties_data['name']}", level=1
+    )
     add_divider(markdown_children)
-    add_paragraph(markdown_children, "".join(desc for desc in skills_data["desc"]))
+    add_paragraph(markdown_children, f"{alignments_properties_data["desc"]}")
 
     return markdown_children

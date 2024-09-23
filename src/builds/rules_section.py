@@ -2,26 +2,29 @@ from src.utils.load_json import load_data
 from src.api.notion_api import create_page, create_database
 from typing import TYPE_CHECKING, Union
 from time import sleep
+from src.builds.children_md import (
+    add_paragraph,
+)
 
 if TYPE_CHECKING:
     import logging
     from notion_client import client
 
 
-def build_weapon_properties_database(logger, notion, data_directory, json_file, args):
-    weapons_prop_db = weapons_properties_db(logger, notion, args.reference_page_id)
-    weapons_properties_page(
+def build_rules_database(logger, notion, data_directory, json_file, args):
+    rules_prop_db = rules_properties_db(logger, notion, args.reference_page_id)
+    rules_properties_page(
         logger,
         notion,
         data_directory,
         json_file,
-        weapons_prop_db,
+        rules_prop_db,
         args.start_range,
         args.end_range,
     )
 
 
-def weapons_properties_page(
+def rules_properties_page(
     logger: "logging.Logger",
     notion: "client",
     data_directory: str,
@@ -42,15 +45,15 @@ def weapons_properties_page(
         end (Union[None, int]): If you want to only capture a range specify the end
     """
     # == Get weapon properties Data
-    weapons_properties_data = load_data(logger, data_directory, json_file)
+    rules_properties_data = load_data(logger, data_directory, json_file)
 
     # == Apply range to weapon properties data
-    if end is None or end > len(weapons_properties_data):
-        end = len(weapons_properties_data)
+    if end is None or end > len(rules_properties_data):
+        end = len(rules_properties_data)
 
     # == Iterates through the specified range of the weapon properties JSON
     for index in range(start, end):
-        selected_prop = weapons_properties_data[index]
+        selected_prop = rules_properties_data[index]
 
         logger.info(
             f"Building Markdown for weapon properties -- {selected_prop['name']} -- Index -- {index} --"
@@ -66,35 +69,36 @@ def weapons_properties_page(
                     }
                 ]
             },
-            "5E Category": {"select": {"name": "Weapon Properties"}},
-            "Description": {
-                "rich_text": [
-                    {
-                        "type": "text",
-                        "text": {
-                            "content": "".join(mn for mn in selected_prop["desc"])
-                        },
-                    }
-                ]
-            },
+            "5E Category": {"select": {"name": "Rules"}},
         }
 
         # == Ensure children_properties list is empty
         children_properties = []
 
-        # == Building markdown for weapon properties
-        children_properties = build_weapons_properties_markdown(selected_prop)
-
         # == Sending api call
         # ==========
-        create_page(
+
+        created_page = create_page(
             logger, notion, database_id, markdown_properties, children_properties
         )
+
+        list_of_desc = selected_prop["desc"].split("\n")
+        temp = []
+
+        for desc in list_of_desc:
+            add_paragraph(temp, desc)
+            if len(temp) >= 100:
+                notion.blocks.children.append(block_id=created_page, children=temp)
+                temp = []
+
+        # Append any remaining elements in temp
+        if temp:
+            notion.blocks.children.append(block_id=created_page, children=temp)
 
         sleep(0.5)
 
 
-def weapons_properties_db(
+def rules_properties_db(
     logger: "logging.Logger", notion: "client", database_id: str
 ) -> str:
     """This generates the api calls needed for Notion. This just builds the empty database page with the required options.
@@ -109,48 +113,19 @@ def weapons_properties_db(
     """
 
     # == Database Name
-    database_name = "Weapon Properties"
+    database_name = "Rules"
 
     # == Building markdown database properties
-    database_weapon_properties = {
+    database_rules = {
         "Name": {"title": {}},
         "Description": {"rich_text": {}},
         "5E Category": {
             "select": {
                 "options": [
-                    {"name": "Weapon Properties", "color": "blue"},
+                    {"name": "Rules", "color": "blue"},
                 ]
             }
         },
     }
 
-    return create_database(
-        logger, notion, database_id, database_name, database_weapon_properties
-    )
-
-
-def build_weapons_properties_markdown(weapons_properties_data: object) -> list:
-    from src.builds.children_md import (
-        add_paragraph,
-        add_section_heading,
-        add_divider,
-    )
-    # == This is all of the building of the api call for
-    # == the markdown body
-    # =======================================================
-
-    # == Initializing the markdown children list
-    # ==========
-    markdown_children = []
-
-    # == Adding header at the top
-    # ==========
-    add_section_heading(
-        markdown_children, f"{weapons_properties_data['name']}", level=1
-    )
-    add_divider(markdown_children)
-    add_paragraph(
-        markdown_children, "".join(desc for desc in weapons_properties_data["desc"])
-    )
-
-    return markdown_children
+    return create_database(logger, notion, database_id, database_name, database_rules)
