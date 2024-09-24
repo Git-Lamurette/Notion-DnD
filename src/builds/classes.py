@@ -79,7 +79,7 @@ def classes_page(
         children_properties = []
 
         # == Building markdown for classes
-        #children_properties = build_weapon_markdown(logger, notion, classes)
+        children_properties = build_weapon_markdown(logger, notion, class_json)
 
         # == Sending api call
         # ==========
@@ -156,48 +156,37 @@ def build_weapon_markdown(
     # == Adding header at the top
     # ==========
     add_section_heading(markdown_children, f"{classes_prop['name']}", level=1)
+    add_section_heading(markdown_children, "Class Features", level=2)
+    add_paragraph(markdown_children, f"As a {classes_prop['name']}, you gain the following class features.")
     add_divider(markdown_children)
-    headers = [
-        f"Type: {classes_prop.category_range}",
-        f"Cost: {classes_prop.cost['quantity']} {classes_prop.cost['unit']}",
-        f"Weight: {classes_prop.get_weight()}",
-    ]
-    add_table(markdown_children, headers)
-    add_divider(markdown_children)
+    add_paragraph(markdown_children, f"Hit Die - d{classes_prop['hit_die']}")
+    
+    # == Adding class features
+    add_section_heading(markdown_children, "Proficiencies", level=3)
+    for prof in classes_prop['proficiencies']:
+        add_paragraph_with_mentions(
+            logger,
+            notion,
+            markdown_children,
+            prof['name'],
+            [prof['name']],
+            "Proficiencies",
+        )
+    
+    for prof in classes_prop['proficiency_choices']:
+        add_paragraph(markdown_children, f"{prof['desc']}")
+        for sub in prof['from']['options']:
+            print(sub)
+            
+            add_paragraph_with_mentions(
+                logger,
+                notion,
+                markdown_children,
+                sub['item']['name'],
+                [sub['item']['name']],
+                "Proficiencies",
+            )
+        input("Press Enter to continue...")
 
-    if classes_prop.special:
-        for special in classes_prop.special:
-            add_paragraph(markdown_children, special)
-        add_divider(markdown_children)
-
-    # == Attributes
-    # ==========
-
-    # == Need to capture the rich text to then add into the table structure
-    stats_table_headers = ["Name", "Cost", "Damage", "Weight", "Properties", "Range"]
-
-    # == Make the string for the values
-    text_string = f"{" ".join(prop for prop in classes.get_properties())}"
-
-    rich_text = add_paragraph_with_mentions(
-        logger,
-        notion,
-        markdown_children,
-        text_string,
-        [text_string],
-        "Weapon Properties",
-        ret=True,
-    )
-
-    stats_table_row = [
-        f"{classes.name}",
-        f"{classes.cost['quantity']} {classes.cost['unit']}",
-        f"{classes.get_damage_dice()}",
-        f"{classes.weight} lbs",
-        rich_text,
-        f"{classes.get_range()}",
-    ]
-
-    add_table(markdown_children, stats_table_headers, [stats_table_row])
 
     return markdown_children

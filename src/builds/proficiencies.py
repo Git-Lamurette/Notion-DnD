@@ -202,10 +202,8 @@ def build_proficiencies_markdown(
 
 
     if proficiencies_data["races"]:
-
         header = []
         header.extend(clas['name'] for clas in proficiencies_data["races"])
-        print(header)
         # == Adding header at the tocp
         # ==========
         add_section_heading(markdown_children, "Proficient races", level=2)

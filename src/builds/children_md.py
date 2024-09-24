@@ -41,7 +41,7 @@ def add_paragraph_with_mentions(
             # logger.info(f"Filter: {filt}")
             # Search for the page to mention
             results = notion.search(query=word, filter=filt).get("results")
-            # logger.info(f"Results: {results}")
+            logger.info(f"Results: {results}")
             if len(results) == 0:
                 rich_text.append({"type": "text", "text": {"content": word}})
             else:
