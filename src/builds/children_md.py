@@ -9,9 +9,10 @@ def add_paragraph_with_mentions(
     markdown_children: list,
     text: str,
     mention_keywords: list,
-    database_name: str,
     ret=False,
 ) -> Union[None, list]:
+    from pprint import pprint
+
     """Add a paragraph with mentions of specific keywords
 
     Args:
@@ -41,30 +42,23 @@ def add_paragraph_with_mentions(
             # logger.info(f"Filter: {filt}")
             # Search for the page to mention
             results = notion.search(query=word, filter=filt).get("results")
-            logger.info(f"Results: {results}")
+            # pprint(f"results: {results}")
             if len(results) == 0:
                 rich_text.append({"type": "text", "text": {"content": word}})
             else:
-                # Filter results to match the "5E Category" property
-                filtered_results = [
-                    result
-                    for result in results
-                    if result.get("properties", {})
-                    .get("5E Category", {})
-                    .get("select", {})
-                    .get("name")
-                    == f"{database_name}"
-                ]
-                if len(filtered_results) == 0:
-                    rich_text.append({"type": "text", "text": {"content": word}})
-                else:
-                    mentioned_page_id = filtered_results[0]["id"]
-                    rich_text.append(
-                        {
-                            "type": "mention",
-                            "mention": {"page": {"id": mentioned_page_id}},
-                        }
-                    )
+                for res in results:
+                    if res["properties"].get("Name"):
+                        captured_word = res["properties"]["Name"]["title"][0]["text"][
+                            "content"
+                        ]
+                        if word.lower() == captured_word.lower():
+                            mentioned_page_id = res["id"]
+                            rich_text.append(
+                                {
+                                    "type": "mention",
+                                    "mention": {"page": {"id": mentioned_page_id}},
+                                }
+                            )
         else:
             rich_text.append({"type": "text", "text": {"content": word}})
 
@@ -174,40 +168,82 @@ def add_paragraph(markdown_children: list, text: str) -> None:
     )
 
 
-'''
-def add_mention(
-    logger: logging.Logger, notion: "Client", markdown_children: list, page_name: str
-) -> None:
-    """Add a mention of another page
+def add_expandable_toggle(markdown_children, title, content, color: str = "default"):
+    """Add an expandable toggle block to the children blocks.
 
     Args:
-        notion (Client): The Notion client
         markdown_children (list): Your markdown list that contains all elements so far
-        page_name (str): The name of the page to mention
+        title (str): The title of the toggle block
+        content (list): The list of text strings or rich text objects to be included as content inside the toggle block
+        color (str, optional): The color of the toggle block. Defaults to "default".
+
+    Example:
+            toggle_content_texts = [
+        "This is the first paragraph inside the toggle.",
+        "This is the second paragraph inside the toggle.",
+        ]
+
+        # Adding the expandable toggle block with basic text content
+        add_expandable_toggle(
+            markdown_children,
+            "Click to Expand (Basic Text)",
+            toggle_content_texts,
+            color="blue",
+        )
+
+        # Adding the expandable toggle block with rich text content
+        add_expandable_toggle(
+            markdown_children,
+            "Click to Expand (Rich Text)",
+            all_thing,
+            color="green_background",
+        )
     """
-    from src.api.notion_api import query_notion
+    # Create the rich text for the toggle title
+    rich_text_title = [
+        {
+            "type": "text",
+            "text": {"content": title},
+        }
+    ]
 
-    query = "Backpack"
-    filter = {"property": "object", "value": "page"}
-    sort = {"direction": "ascending", "timestamp": "last_edited_time"}
-
-    mentioned_page_id = query_notion(logger, notion, query, filter, sort)[0]["id"]
-
-    content = {
-        "object": "block",
-        "type": "paragraph",
-        "paragraph": {
-            "rich_text": [
-                {
-                    "type": "mention",
-                    "mention": {"page": {"id": mentioned_page_id}},
+    # Determine if the content is basic text or rich text
+    if all(isinstance(item, str) for item in content):
+        # Convert basic text strings to rich text objects
+        content_blocks = [
+            {
+                "object": "block",
+                "type": "paragraph",
+                "paragraph": {
+                    "rich_text": [{"type": "text", "text": {"content": text}}]
                 },
-            ]
+            }
+            for text in content
+        ]
+    else:
+        # Use the rich text objects directly
+        content_blocks = [
+            {
+                "object": "block",
+                "type": "paragraph",
+                "paragraph": {"rich_text": rich_text},
+            }
+            for rich_text in content
+        ]
+
+    # Create the toggle block
+    toggle_block = {
+        "object": "block",
+        "type": "toggle",
+        "toggle": {
+            "rich_text": rich_text_title,
+            "color": color,
+            "children": content_blocks,
         },
     }
 
-    markdown_children.append(content)
-'''
+    # Append the toggle block to the markdown children
+    markdown_children.append(toggle_block)
 
 
 def add_section_heading(markdown_children: list, text: str, level: int = 2) -> None:

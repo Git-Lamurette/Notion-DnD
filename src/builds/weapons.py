@@ -1,3 +1,4 @@
+from cgi import test
 from src.classes.equipment_class import _equipment
 from src.utils.load_json import load_data
 from src.api.notion_api import create_page, create_database
@@ -280,15 +281,17 @@ def build_weapon_markdown(
     stats_table_headers = ["Name", "Cost", "Damage", "Weight", "Properties", "Range"]
 
     # == Make the string for the values
-    text_string = f"{" ".join(prop for prop in equipment.get_properties())}"
+    # test_list = []
+    text_string = " ".join(prop for prop in equipment.get_properties())
+    test_list = text_string.split()
+    # .extend(prop for prop in equipment.get_properties())
 
     rich_text = add_paragraph_with_mentions(
         logger,
         notion,
         markdown_children,
         text_string,
-        [text_string],
-        "Weapon Properties",
+        test_list,
         ret=True,
     )
 

@@ -609,7 +609,7 @@
         }
       },
       {
-        "desc": "(a) a diplomat’s pack or (b) an entertainer’s pack",
+        "desc": "(a) a diplomat's pack or (b) an entertainer's pack",
         "choose": 1,
         "type": "equipment",
         "from": {
@@ -1246,7 +1246,7 @@
         }
       },
       {
-        "desc": "(a) a priest’s pack or (b) an explorer’s pack",
+        "desc": "(a) a priest's pack or (b) an explorer's pack",
         "choose": 1,
         "type": "equipment",
         "from": {
@@ -2010,7 +2010,7 @@
         }
       },
       {
-        "desc": "(a) a dungeoneer’s pack or (b) an explorer’s pack",
+        "desc": "(a) a dungeoneer's pack or (b) an explorer's pack",
         "choose": 1,
         "type": "equipment",
         "from": {
@@ -2168,7 +2168,7 @@
         }
       },
       {
-        "desc": "Choose one type of artisan’s tools or one musical instrument",
+        "desc": "Choose one type of artisan's tools or one musical instrument",
         "type": "proficiencies",
         "choose": 1,
         "from": {
@@ -2517,7 +2517,7 @@
         }
       },
       {
-        "desc": "(a) a dungeoneer’s pack or (b) an explorer’s pack",
+        "desc": "(a) a dungeoneer's pack or (b) an explorer's pack",
         "choose": 1,
         "type": "equipment",
         "from": {
@@ -2798,7 +2798,7 @@
         }
       },
       {
-        "desc": "(a) a priest’s pack or (b) an explorer’s pack",
+        "desc": "(a) a priest's pack or (b) an explorer's pack",
         "choose": 1,
         "type": "equipment",
         "from": {
@@ -3142,7 +3142,7 @@
         }
       },
       {
-        "desc": "(a) a dungeoneer’s pack or (b) an explorer’s pack",
+        "desc": "(a) a dungeoneer's pack or (b) an explorer's pack",
         "choose": 1,
         "type": "equipment",
         "from": {
@@ -3597,7 +3597,7 @@
         }
       },
       {
-        "desc": "(a) a burglar’s pack, (b) a dungeoneer’s pack, or (c) an explorer’s pack",
+        "desc": "(a) a burglar's pack, (b) a dungeoneer's pack, or (c) an explorer's pack",
         "choose": 1,
         "type": "equipment",
         "from": {
@@ -3976,7 +3976,7 @@
         }
       },
       {
-        "desc": "(a) a dungeoneer’s pack or (b) an explorer’s pack",
+        "desc": "(a) a dungeoneer's pack or (b) an explorer's pack",
         "choose": 1,
         "type": "equipment",
         "from": {
@@ -4283,7 +4283,7 @@
         }
       },
       {
-        "desc": "(a) a scholar’s pack or (b) a dungeoneer’s pack",
+        "desc": "(a) a scholar's pack or (b) a dungeoneer's pack",
         "choose": 1,
         "type": "equipment",
         "from": {
@@ -4593,7 +4593,7 @@
         }
       },
       {
-        "desc": "(a) a scholar’s pack or (b) an explorer’s pack",
+        "desc": "(a) a scholar's pack or (b) an explorer's pack",
         "choose": 1,
         "type": "equipment",
         "from": {
