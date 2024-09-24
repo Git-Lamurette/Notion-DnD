@@ -30,33 +30,104 @@ This wil build all databases
 """
 
 from notion_client import Client
-from src.api.notion_call import create_page_under_page
+from src.api.notion_api import create_page_under_page
 from src.utils.logger import configure_logging
-from src.api.creature import creature_page, creature_db
-from src.api.weapons import weapons_page, weapons_db
-from src.api.armors import armor_page, armor_db
-from src.api.items import items_page, items_db
-from src.api.magic_items import magic_items_page, magic_items_db
-from src.api.spells import spells_page, spells_db
-from src.api.weapons_properties import weapons_properties_db, weapons_properties_page
-from src.api.skills import skills_db, skills_page
-from src.api.magic_schools import magic_schools_db, magic_schools_page
-# from src.utils.get_keys import get_keys
+from src.builds.creature import build_creature_database
+from src.builds.weapons import build_weapons_database
+from src.builds.armors import build_armors_database
+from src.builds.items import build_items_database
+from src.builds.magic_items import build_magic_items_database
+from src.builds.spells import build_spells_database
+from src.builds.weapons_properties import build_weapon_properties_database
+from src.builds.skills import build_skills_database
+from src.builds.magic_schools import build_magic_schools_database
+from src.builds.rules_section import build_rules_database
+from src.builds.languages import build_languages_database
+from src.builds.damage_types import build_damage_types_database
+from src.builds.conditions import build_conditions_database
+from src.builds.alignments import build_alignments_database
+from src.builds.ability_scores import build_ability_scores_database
+from src.builds.proficiencies import build_proficiencies_database
+from src.builds.classes import build_classes_database
+from src.utils.get_keys import get_keys
+from pprint import pprint
 
+# from src.utils.get_keys import get_keys
 import argparse
 
 
 NAME = "D&D 5E Notion Database Builder"
 VERSION = "0.0.1"
-DATA_DIRECTORY = "src/data"
+DATA_DIRECTORY = "data"
 LOGGING_DIRECTORY = "logs"
 
 
 def main(args):
-    # == Configure logging
+    # == Configure the logger
     logger = configure_logging(LOGGING_DIRECTORY)
+    # == Display the initial information
+    log_initial_info(logger, args)
+    # == Create the Notion client
+    notion = Client(auth=args.auth_key)
+    # ==
+    #get_keys(logger, f"{DATA_DIRECTORY}", "5e-SRD-Classes.json", "subclasses")
+    # == Create the reference page - Needed for nested databases
+    args.reference_page_id = create_page_under_page(
+        logger, notion, args.database_id, "Reference"
+    )
+    args.character_ref_page_id = create_page_under_page(
+        logger, notion, args.database_id, "Character Reference"
+    )
+    # Define a mapping of database names to their corresponding build functions and JSON files
+    database_builders = {
+        # == References first
+        "weapon-properties": (
+            build_weapon_properties_database,
+            "5e-SRD-Weapon-Properties.json",
+        ),
+        "magic-schools": (build_magic_schools_database, "5e-SRD-Magic-Schools.json"),
+        "rules": (build_rules_database, "5e-SRD-Rule-Sections.json"),
+        "languages": (build_languages_database, "5e-SRD-Languages.json"),
+        "damage-types": (build_damage_types_database, "5e-SRD-Damage-Types.json"),
+        "conditions": (build_conditions_database, "5e-SRD-Conditions.json"),
+        "alignments": (build_alignments_database, "5e-SRD-Alignments.json"),
+        "proficiencies": (build_proficiencies_database, "5e-SRD-Proficiencies.json"),
+        # == Ability score requires skills to be present to populate correctly
+        "skills": (build_skills_database, "5e-SRD-Skills.json"),
+        "ability-scores": (build_ability_scores_database, "5e-SRD-Ability-Scores.json"),
+        # == Most of these rely on references for links
+        "creatures": (build_creature_database, "5e-SRD-Monsters.json"),
+        "classes": (build_classes_database, "5e-SRD-Classes.json"),
+        "weapons": (build_weapons_database, "5e-SRD-Equipment.json"),
+        "armors": (build_armors_database, "5e-SRD-Equipment.json"),
+        "items": (build_items_database, "5e-SRD-Equipment.json"),
+        "magic-items": (build_magic_items_database, "5e-SRD-Magic-Items.json"),
+        "spells": (build_spells_database, "5e-SRD-Spells.json"),
+    }
 
-    # == Logging passed through info
+    # Iterate over the build list and call the corresponding build function
+    for item in args.build:
+        item_lower = item.lower()
+        if item_lower.lower() == "all":
+            # If "all" is specified, build all databases
+            for builder, json_file in database_builders.values():
+                log_db_build(logger, item, json_file)
+                builder(logger, notion, DATA_DIRECTORY, json_file, args)
+            break
+        if item_lower in database_builders:
+            builder, json_file = database_builders[item_lower]
+            log_db_build(logger, item, json_file)
+            builder(logger, notion, DATA_DIRECTORY, json_file, args)
+
+
+def log_db_build(logger, item, json_file):
+    logger.info("=========================================================")
+    logger.info(f"==  Building {item} database")
+    logger.info(f"==  Using {json_file} as the source file")
+    logger.info("=========================================================")
+
+
+def log_initial_info(logger, args):
     logger.info("=========================================================")
     logger.info("==             D&D 5E Notion Database Builder          ==")
     logger.info(f"==                   Version {VERSION}                     ==")
@@ -69,143 +140,6 @@ def main(args):
     logger.info(f"==  End Range           : {args.end_range}")
     logger.info("==")
     logger.info("=========================================================")
-
-    # == Get the unique keys and values from the JSON file
-    # == Useful if this is your first time interacting with the JSON file -- Ensure you uncomment the import
-    # ========================
-    # get_keys(logger, DATA_DIRECTORY, "5e-SRD-Spells.json", "casting_time")
-
-    # == Using your auth key we access your Notion account
-    notion = Client(auth=args.auth_key)
-
-    # == This enables the selection of the specified databases you want build
-    # ========================
-    # == This is creating everything needed for the creature database
-    # ========================
-
-    if any(item.lower() in ["creatures", "all"] for item in args.build):
-        # == Creating the database itself
-        creature_db_id = creature_db(logger, notion, args.database_id)
-        # == Populating the database with all the markdown files
-        creature_page(
-            logger,
-            notion,
-            DATA_DIRECTORY,
-            creature_db_id,
-            args.start_range,
-            args.end_range,
-        )
-
-    if any(item.lower() in ["weapons", "all"] for item in args.build):
-        weapons_db_id = weapons_db(logger, notion, args.database_id)
-
-        weapons_page(
-            logger,
-            notion,
-            DATA_DIRECTORY,
-            weapons_db_id,
-            args.start_range,
-            args.end_range,
-        )
-
-    if any(item.lower() in ["armors", "all"] for item in args.build):
-        armors_db_id = armor_db(logger, notion, args.database_id)
-
-        armor_page(
-            logger,
-            notion,
-            DATA_DIRECTORY,
-            armors_db_id,
-            args.start_range,
-            args.end_range,
-        )
-
-    if any(item in ["items", "all"] for item in args.build):
-        items_db_id = items_db(logger, notion, args.database_id)
-        # items_db_id = ""
-        items_page(
-            logger,
-            notion,
-            DATA_DIRECTORY,
-            items_db_id,
-            args.start_range,
-            args.end_range,
-        )
-
-    if any(item in ["magic-items", "all"] for item in args.build):
-        items_db_id = magic_items_db(logger, notion, args.database_id)
-        # items_db_id = ""
-        magic_items_page(
-            logger,
-            notion,
-            DATA_DIRECTORY,
-            items_db_id,
-            args.start_range,
-            args.end_range,
-        )
-
-    if any(item in ["spells", "all"] for item in args.build):
-        spells_db_id = spells_db(logger, notion, args.database_id)
-        spells_page(
-            logger,
-            notion,
-            DATA_DIRECTORY,
-            spells_db_id,
-            args.start_range,
-            args.end_range,
-        )
-
-    # == This is creating all of the refrence databases
-    # ========================
-
-    reference_page_id = create_page_under_page(
-        logger, notion, args.database_id, "Reference"
-    )
-
-    # == Weapons properties
-    # ========================
-
-    if any(item in ["weapon-properties", "all"] for item in args.build):
-        weapons_prop_db = weapons_properties_db(logger, notion, reference_page_id)
-        weapons_properties_page(
-            logger,
-            notion,
-            DATA_DIRECTORY,
-            weapons_prop_db,
-            args.start_range,
-            args.end_range,
-            json_file="5e-SRD-Weapon-Properties.json",
-        )
-
-    # == Skills
-    # ========================
-
-    if any(item in ["skills", "all"] for item in args.build):
-        skills_db_id = skills_db(logger, notion, reference_page_id)
-        skills_page(
-            logger,
-            notion,
-            DATA_DIRECTORY,
-            skills_db_id,
-            args.start_range,
-            args.end_range,
-            json_file="5e-SRD-Skills.json",
-        )
-
-    # == Magic Schools
-    # ========================
-
-    if any(item in ["magic-schools", "all"] for item in args.build):
-        magic_schools_db_id = magic_schools_db(logger, notion, reference_page_id)
-        magic_schools_page(
-            logger,
-            notion,
-            DATA_DIRECTORY,
-            magic_schools_db_id,
-            args.start_range,
-            args.end_range,
-            json_file="5e-SRD-Magic-Schools.json",
-        )
 
 
 if __name__ == "__main__":
@@ -256,6 +190,15 @@ if __name__ == "__main__":
         required=False,
         default=None,
         help="The end of the range you want to import",
+    )
+
+    parser.add_argument(
+        "-u",
+        "--update",
+        type=str,
+        required=False,
+        default=None,
+        help="The database you want to update - only works with a single options at a time",
     )
 
     # Parse the arguments

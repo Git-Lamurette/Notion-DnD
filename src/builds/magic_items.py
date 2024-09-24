@@ -1,7 +1,6 @@
 from src.classes.magic_items_class import _magic_item
-from src.markdown.magic_items_md import build_magic_items_markdown
 from src.utils.load_json import load_data
-from src.api.notion_call import create_page, create_database
+from src.api.notion_api import create_page, create_database
 from typing import TYPE_CHECKING, Union
 from time import sleep
 
@@ -10,10 +9,24 @@ if TYPE_CHECKING:
     from notion_client import client
 
 
+def build_magic_items_database(logger, notion, data_directory, json_file, args):
+    items_db_id = magic_items_db(logger, notion, args.database_id)
+    magic_items_page(
+        logger,
+        notion,
+        data_directory,
+        json_file,
+        items_db_id,
+        args.start_range,
+        args.end_range,
+    )
+
+
 def magic_items_page(
     logger: "logging.Logger",
     notion: "client",
     data_directory: str,
+    json_file: str,
     database_id: str,
     start: int,
     end: Union[None, int],
@@ -30,7 +43,7 @@ def magic_items_page(
         end (Union[None, int]): If you want to only capture a range specify the end
     """
     # == Get magic_items Data
-    magic_items_data = load_data(logger, data_directory, "5e-SRD-Magic-Items.json")
+    magic_items_data = load_data(logger, data_directory, json_file)
 
     # == Apply range to magic_items data
     if end is None or end > len(magic_items_data):
@@ -57,6 +70,7 @@ def magic_items_page(
                     }
                 ]
             },
+            "5E Category": {"select": {"name": "Magic Items"}},
             "URL": {
                 "url": f"https://www.dndbeyond.com/magic-items/{magic_items.index}"
             },
@@ -122,6 +136,9 @@ def magic_items_db(logger: "logging.Logger", notion: "client", database_id: str)
     database_magic_items_properties = {
         "Name": {"title": {}},
         "URL": {"url": {}},
+        "5E Category": {
+            "select": {"options": [{"name": "Magic Items", "color": "green"}]}
+        },
         "Rarity": {
             "select": {
                 "options": [
@@ -168,3 +185,33 @@ def magic_items_db(logger: "logging.Logger", notion: "client", database_id: str)
     return create_database(
         logger, notion, database_id, database_name, database_magic_items_properties
     )
+
+
+def build_magic_items_markdown(
+    magic_item: object, notion: "client", logger: "logging.Logger", database_id: str
+) -> list:
+    from src.builds.children_md import (
+        add_paragraph,
+        add_section_heading,
+        add_divider,
+    )
+    # == This is all of the building of the api call for
+    # == the markdown body
+    # =======================================================
+
+    # == Initializing the markdown children list
+    # ==========
+    markdown_children = []
+
+    # == Adding header at the top
+    # ==========
+    add_section_heading(markdown_children, f"{magic_item.name}", level=1)
+
+    for index, desc in enumerate(magic_item.desc):
+        if index == 0:
+            add_paragraph(markdown_children, desc)
+            add_divider(markdown_children)
+        else:
+            add_paragraph(markdown_children, desc)
+
+    return markdown_children

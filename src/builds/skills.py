@@ -1,5 +1,5 @@
 from src.utils.load_json import load_data
-from src.api.notion_call import create_page, create_database
+from src.api.notion_api import create_page, create_database
 from typing import TYPE_CHECKING, Union
 from time import sleep
 
@@ -8,17 +8,30 @@ if TYPE_CHECKING:
     from notion_client import client
 
 
-def magic_schools_page(
+def build_skills_database(logger, notion, data_directory, json_file, args):
+    skills_db_id = skills_db(logger, notion, args.reference_page_id)
+    skills_page(
+        logger,
+        notion,
+        data_directory,
+        json_file,
+        skills_db_id,
+        args.start_range,
+        args.end_range,
+    )
+
+
+def skills_page(
     logger: "logging.Logger",
     notion: "client",
     data_directory: str,
+    json_file: str,
     database_id: str,
     start: int,
     end: Union[None, int],
-    json_file: str,
 ) -> None:
     """This generates the api calls needed for Notion. This parses the JSON and build the markdown body for the API call.
-    It iterates through each magic_schools in the json depending on params.
+    It iterates through each skills in the json depending on params.
 
     Args:
         logger (logging.Logger): Logging object
@@ -28,36 +41,44 @@ def magic_schools_page(
         start (int): If you want to only capture a range specify the start
         end (Union[None, int]): If you want to only capture a range specify the end
     """
-    # == Get magic_schools Data
-    magic_schools_data = load_data(logger, data_directory, json_file)
+    # == Get skills Data
+    skills_data = load_data(logger, data_directory, json_file)
 
-    # == Apply range to magic_schools data
-    if end is None or end > len(magic_schools_data):
-        end = len(magic_schools_data)
+    # == Apply range to skills data
+    if end is None or end > len(skills_data):
+        end = len(skills_data)
 
-    # == Iterates through the specified range of the magic_schools JSON
+    # == Iterates through the specified range of the skills JSON
     for index in range(start, end):
-        schools = magic_schools_data[index]
+        selected_skill = skills_data[index]
 
         logger.info(
-            f"Building Markdown for magic_schools -- {schools['name']} -- Index -- {index} --"
+            f"Building Markdown for skills -- {selected_skill['name']} -- Index -- {index} --"
         )
 
-        # == Building markdown properties from _magic_schools class
+        # == Building markdown properties from _skills class
         markdown_properties = {
             "Name": {
                 "title": [
                     {
                         "type": "text",
-                        "text": {"content": schools["name"]},
+                        "text": {"content": selected_skill["name"]},
                     }
                 ]
+            },
+            "5E Category": {"select": {"name": "Skills"}},
+            "Ability Score": {
+                "select": {
+                    "name": selected_skill.get("ability_score", {}).get("name", " ")
+                }
             },
             "Description": {
                 "rich_text": [
                     {
                         "type": "text",
-                        "text": {"content": schools["desc"]},
+                        "text": {
+                            "content": "".join(mn for mn in selected_skill["desc"])
+                        },
                     }
                 ]
             },
@@ -66,8 +87,8 @@ def magic_schools_page(
         # == Ensure children_properties list is empty
         children_properties = []
 
-        # == Building markdown for magic_schools
-        children_properties = build_magic_schools_markdown(schools)
+        # == Building markdown for skills
+        children_properties = build_skills_markdown(selected_skill)
 
         # == Sending api call
         # ==========
@@ -78,9 +99,7 @@ def magic_schools_page(
         sleep(0.5)
 
 
-def magic_schools_db(
-    logger: "logging.Logger", notion: "client", database_id: str
-) -> str:
+def skills_db(logger: "logging.Logger", notion: "client", database_id: str) -> str:
     """This generates the api calls needed for Notion. This just builds the empty database page with the required options.
 
     Args:
@@ -93,12 +112,25 @@ def magic_schools_db(
     """
 
     # == Database Name
-    database_name = "Magic Schools"
+    database_name = "Skills"
 
     # == Building markdown database properties
     database_weapon_properties = {
         "Name": {"title": {}},
         "Description": {"rich_text": {}},
+        "Ability Score": {
+            "select": {
+                "options": [
+                    {"name": "INT", "color": "gray"},
+                    {"name": "DEX", "color": "blue"},
+                    {"name": "STR", "color": "red"},
+                    {"name": "CHA", "color": "pink"},
+                    {"name": "CON", "color": "purple"},
+                    {"name": "WIS", "color": "brown"},
+                ]
+            }
+        },
+        "5E Category": {"select": {"options": [{"name": "Skills", "color": "green"}]}},
     }
 
     return create_database(
@@ -106,8 +138,8 @@ def magic_schools_db(
     )
 
 
-def build_magic_schools_markdown(magic_schools_data: object) -> list:
-    from src.markdown.children_md import (
+def build_skills_markdown(skills_data: object) -> list:
+    from src.builds.children_md import (
         add_paragraph,
         add_section_heading,
         add_divider,
@@ -122,8 +154,8 @@ def build_magic_schools_markdown(magic_schools_data: object) -> list:
 
     # == Adding header at the top
     # ==========
-    add_section_heading(markdown_children, f"{magic_schools_data['name']}", level=1)
+    add_section_heading(markdown_children, f"{skills_data['name']}", level=1)
     add_divider(markdown_children)
-    add_paragraph(markdown_children, magic_schools_data["desc"])
+    add_paragraph(markdown_children, "".join(desc for desc in skills_data["desc"]))
 
     return markdown_children

@@ -1,6 +1,5 @@
-from src.markdown.weapons_properties_md import build_weapons_properties_markdown
 from src.utils.load_json import load_data
-from src.api.notion_call import create_page, create_database
+from src.api.notion_api import create_page, create_database
 from typing import TYPE_CHECKING, Union
 from time import sleep
 
@@ -9,14 +8,29 @@ if TYPE_CHECKING:
     from notion_client import client
 
 
-def weapons_properties_page(
+def build_alignments_database(logger, notion, data_directory, json_file, args):
+    alignments_prop_db = alignments_properties_db(
+        logger, notion, args.reference_page_id
+    )
+    alignments_properties_page(
+        logger,
+        notion,
+        data_directory,
+        json_file,
+        alignments_prop_db,
+        args.start_range,
+        args.end_range,
+    )
+
+
+def alignments_properties_page(
     logger: "logging.Logger",
     notion: "client",
     data_directory: str,
+    json_file: str,
     database_id: str,
     start: int,
     end: Union[None, int],
-    json_file: str,
 ) -> None:
     """This generates the api calls needed for Notion. This parses the JSON and build the markdown body for the API call.
     It iterates through each weapon properties in the json depending on params.
@@ -30,15 +44,15 @@ def weapons_properties_page(
         end (Union[None, int]): If you want to only capture a range specify the end
     """
     # == Get weapon properties Data
-    weapons_properties_data = load_data(logger, data_directory, json_file)
+    alignments_properties_data = load_data(logger, data_directory, json_file)
 
     # == Apply range to weapon properties data
-    if end is None or end > len(weapons_properties_data):
-        end = len(weapons_properties_data)
+    if end is None or end > len(alignments_properties_data):
+        end = len(alignments_properties_data)
 
     # == Iterates through the specified range of the weapon properties JSON
     for index in range(start, end):
-        selected_prop = weapons_properties_data[index]
+        selected_prop = alignments_properties_data[index]
 
         logger.info(
             f"Building Markdown for weapon properties -- {selected_prop['name']} -- Index -- {index} --"
@@ -54,6 +68,7 @@ def weapons_properties_page(
                     }
                 ]
             },
+            "5E Category": {"select": {"name": "Alignments"}},
             "Description": {
                 "rich_text": [
                     {
@@ -70,7 +85,7 @@ def weapons_properties_page(
         children_properties = []
 
         # == Building markdown for weapon properties
-        children_properties = build_weapons_properties_markdown(selected_prop)
+        children_properties = build_alignments_properties_markdown(selected_prop)
 
         # == Sending api call
         # ==========
@@ -81,7 +96,7 @@ def weapons_properties_page(
         sleep(0.5)
 
 
-def weapons_properties_db(
+def alignments_properties_db(
     logger: "logging.Logger", notion: "client", database_id: str
 ) -> str:
     """This generates the api calls needed for Notion. This just builds the empty database page with the required options.
@@ -96,14 +111,48 @@ def weapons_properties_db(
     """
 
     # == Database Name
-    database_name = "Weapon Properties"
+    database_name = "Alignments"
 
     # == Building markdown database properties
-    database_weapon_properties = {
+    database_alignments = {
         "Name": {"title": {}},
         "Description": {"rich_text": {}},
+        "5E Category": {
+            "select": {
+                "options": [
+                    {"name": "Alignments", "color": "blue"},
+                ]
+            }
+        },
     }
 
     return create_database(
-        logger, notion, database_id, database_name, database_weapon_properties
+        logger, notion, database_id, database_name, database_alignments
     )
+
+
+def build_alignments_properties_markdown(
+    alignments_properties_data: object,
+) -> list:
+    from src.builds.children_md import (
+        add_paragraph,
+        add_section_heading,
+        add_divider,
+    )
+    # == This is all of the building of the api call for
+    # == the markdown body
+    # =======================================================
+
+    # == Initializing the markdown children list
+    # ==========
+    markdown_children = []
+
+    # == Adding header at the top
+    # ==========
+    add_section_heading(
+        markdown_children, f"{alignments_properties_data['name']}", level=1
+    )
+    add_divider(markdown_children)
+    add_paragraph(markdown_children, f"{alignments_properties_data["desc"]}")
+
+    return markdown_children

@@ -1,19 +1,30 @@
 from src.classes.equipment_class import _equipment
-from src.markdown.armor_md import build_armor_markdown
 from src.utils.load_json import load_data
-from src.api.notion_call import create_page, create_database
-from typing import TYPE_CHECKING, Union
+from src.api.notion_api import create_page, create_database
+from typing import Union
 from time import sleep
+import logging
+from notion_client import Client
 
-if TYPE_CHECKING:
-    import logging
-    from notion_client import client
+
+def build_armors_database(logger, notion, data_directory, json_file, args):
+    armors_db_id = armor_db(logger, notion, args.database_id)
+    armor_page(
+        logger,
+        notion,
+        data_directory,
+        json_file,
+        armors_db_id,
+        args.start_range,
+        args.end_range,
+    )
 
 
 def armor_page(
-    logger: "logging.Logger",
-    notion: "client",
+    logger: logging.Logger,
+    notion: Client,
     data_directory: str,
+    json_file: str,
     database_id: str,
     start: int,
     end: Union[None, int],
@@ -30,7 +41,7 @@ def armor_page(
         end (Union[None, int]): If you want to only capture a range specify the end
     """
     # == Get equipment Data
-    equipment_data = load_data(logger, data_directory, "5e-SRD-Equipment.json")
+    equipment_data = load_data(logger, data_directory, json_file)
 
     # == Apply range to equipment data
     if end is None or end > len(equipment_data):
@@ -54,12 +65,19 @@ def armor_page(
                 "URL": {
                     "url": f"https://www.dndbeyond.com/equipment/{equipment.index.strip("-armor")}"
                 },
+                "5E Category": {"select": {"name": "Armors"}},
                 "Category": {"select": {"name": equipment.equipment_category["name"]}},
                 "Cost": {"rich_text": [{"text": {"content": equipment.get_cost()}}]},
-                "Weight": {"rich_text": [{"text": {"content": f"{equipment.weight} lbs"}}]},
+                "Weight": {
+                    "rich_text": [{"text": {"content": f"{equipment.weight} lbs"}}]
+                },
                 "Type": {"multi_select": [{"name": equipment.armor_category}]},
-                "Armor Class": {"rich_text": [{"text": {"content": equipment.get_armor_class()}}]},
-                "Strength Requirement": {"number": equipment.get_strength_requirement()},
+                "Armor Class": {
+                    "rich_text": [{"text": {"content": equipment.get_armor_class()}}]
+                },
+                "Strength Requirement": {
+                    "number": equipment.get_strength_requirement()
+                },
                 "Stealth Disadvantage": {"checkbox": equipment.stealth_disadvantage},
             }
 
@@ -72,13 +90,17 @@ def armor_page(
             # == Sending api call
             # ==========
             create_page(
-                logger, notion, database_id, markdown_properties, children_properties
+                logger,
+                notion,
+                database_id,
+                markdown_properties,
+                children_properties,
             )
-            
+
             sleep(0.5)
 
 
-def armor_db(logger: "logging.Logger", notion: "client", database_id: str) -> str:
+def armor_db(logger: "logging.Logger", notion: "Client", database_id: str) -> str:
     """This generates the api calls needed for Notion. This just builds the empty database page with the required options.
 
     Args:
@@ -97,6 +119,7 @@ def armor_db(logger: "logging.Logger", notion: "client", database_id: str) -> st
     database_armor_properties = {
         "Name": {"title": {}},
         "URL": {"url": {}},
+        "5E Category": {"select": {"options": [{"name": "Armors", "color": "green"}]}},
         "Category": {
             "select": {
                 "options": [
@@ -123,3 +146,56 @@ def armor_db(logger: "logging.Logger", notion: "client", database_id: str) -> st
     return create_database(
         logger, notion, database_id, database_name, database_armor_properties
     )
+
+
+def build_armor_markdown(equipment: _equipment) -> list:
+    from src.builds.children_md import (
+        add_section_heading,
+        add_table,
+        add_divider,
+    )
+    # == This is all of the building of the api call for
+    # == the markdown body
+    # =======================================================
+
+    # == Initializing the markdown children list
+    # ==========
+    markdown_children = []
+
+    # == Adding header at the top
+    # ==========
+    add_section_heading(markdown_children, f"{equipment.name}", level=1)
+
+    headers = [
+        f"Type: {equipment.armor_category}",
+        f"Cost: {equipment.cost['quantity']} {equipment.cost['unit']}",
+        f"Weight: {equipment.get_weight()}",
+    ]
+    add_table(markdown_children, headers)
+    add_divider(markdown_children)
+
+    # == Attributes
+    # ==========
+    stats_table_headers = [
+        "Name",
+        "Cost",
+        "Armor Class",
+        "Strength",
+        "Stealth",
+        "Weight",
+    ]
+    stats_table_row = [
+        f"{equipment.name}",
+        f"{equipment.cost['quantity']} {equipment.cost['unit']}",
+        f"{equipment.get_armor_class()}",
+        f"{' -- ' if equipment.get_strength_requirement() == 0 else equipment.get_strength_requirement()}",
+        f"{' -- ' if not equipment.stealth_disadvantage else "Disadvantage"}",
+        f"{equipment.weight} lbs",
+    ]
+    add_table(
+        markdown_children,
+        stats_table_headers,
+        [stats_table_row],
+    )
+
+    return markdown_children

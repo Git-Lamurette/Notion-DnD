@@ -1,5 +1,5 @@
 from src.utils.load_json import load_data
-from src.api.notion_call import create_page, create_database
+from src.api.notion_api import create_page, create_database
 from typing import TYPE_CHECKING, Union
 from time import sleep
 
@@ -8,17 +8,32 @@ if TYPE_CHECKING:
     from notion_client import client
 
 
-def skills_page(
+def build_conditions_database(logger, notion, data_directory, json_file, args):
+    conditions_prop_db = conditions_properties_db(
+        logger, notion, args.reference_page_id
+    )
+    conditions_properties_page(
+        logger,
+        notion,
+        data_directory,
+        json_file,
+        conditions_prop_db,
+        args.start_range,
+        args.end_range,
+    )
+
+
+def conditions_properties_page(
     logger: "logging.Logger",
     notion: "client",
     data_directory: str,
+    json_file: str,
     database_id: str,
     start: int,
     end: Union[None, int],
-    json_file: str,
 ) -> None:
     """This generates the api calls needed for Notion. This parses the JSON and build the markdown body for the API call.
-    It iterates through each skills in the json depending on params.
+    It iterates through each conditions properties in the json depending on params.
 
     Args:
         logger (logging.Logger): Logging object
@@ -28,37 +43,37 @@ def skills_page(
         start (int): If you want to only capture a range specify the start
         end (Union[None, int]): If you want to only capture a range specify the end
     """
-    # == Get skills Data
-    skills_data = load_data(logger, data_directory, json_file)
+    # == Get conditions properties Data
+    conditions_properties_data = load_data(logger, data_directory, json_file)
 
-    # == Apply range to skills data
-    if end is None or end > len(skills_data):
-        end = len(skills_data)
+    # == Apply range to conditions properties data
+    if end is None or end > len(conditions_properties_data):
+        end = len(conditions_properties_data)
 
-    # == Iterates through the specified range of the skills JSON
+    # == Iterates through the specified range of the conditions properties JSON
     for index in range(start, end):
-        selected_skill = skills_data[index]
+        selected_prop = conditions_properties_data[index]
 
         logger.info(
-            f"Building Markdown for skills -- {selected_skill['name']} -- Index -- {index} --"
+            f"Building Markdown for conditions properties -- {selected_prop['name']} -- Index -- {index} --"
         )
 
-        # == Building markdown properties from _skills class
         markdown_properties = {
             "Name": {
                 "title": [
                     {
                         "type": "text",
-                        "text": {"content": selected_skill["name"]},
+                        "text": {"content": selected_prop["name"]},
                     }
                 ]
             },
+            "5E Category": {"select": {"name": "Conditions"}},
             "Description": {
                 "rich_text": [
                     {
                         "type": "text",
                         "text": {
-                            "content": "".join(mn for mn in selected_skill["desc"])
+                            "content": "".join(mn for mn in selected_prop["desc"])
                         },
                     }
                 ]
@@ -68,8 +83,8 @@ def skills_page(
         # == Ensure children_properties list is empty
         children_properties = []
 
-        # == Building markdown for skills
-        children_properties = build_skills_markdown(selected_skill)
+        # == Building markdown for conditions properties
+        children_properties = build_conditions_properties_markdown(selected_prop)
 
         # == Sending api call
         # ==========
@@ -80,7 +95,9 @@ def skills_page(
         sleep(0.5)
 
 
-def skills_db(logger: "logging.Logger", notion: "client", database_id: str) -> str:
+def conditions_properties_db(
+    logger: "logging.Logger", notion: "client", database_id: str
+) -> str:
     """This generates the api calls needed for Notion. This just builds the empty database page with the required options.
 
     Args:
@@ -93,21 +110,30 @@ def skills_db(logger: "logging.Logger", notion: "client", database_id: str) -> s
     """
 
     # == Database Name
-    database_name = "Skills"
+    database_name = "Conditions"
 
     # == Building markdown database properties
-    database_weapon_properties = {
+    database_conditions = {
         "Name": {"title": {}},
         "Description": {"rich_text": {}},
+        "5E Category": {
+            "select": {
+                "options": [
+                    {"name": "Conditions", "color": "blue"},
+                ]
+            }
+        },
     }
 
     return create_database(
-        logger, notion, database_id, database_name, database_weapon_properties
+        logger, notion, database_id, database_name, database_conditions
     )
 
 
-def build_skills_markdown(skills_data: object) -> list:
-    from src.markdown.children_md import (
+def build_conditions_properties_markdown(
+    conditions_properties_data: object,
+) -> list:
+    from src.builds.children_md import (
         add_paragraph,
         add_section_heading,
         add_divider,
@@ -122,8 +148,13 @@ def build_skills_markdown(skills_data: object) -> list:
 
     # == Adding header at the top
     # ==========
-    add_section_heading(markdown_children, f"{skills_data['name']}", level=1)
+    add_section_heading(
+        markdown_children, f"{conditions_properties_data['name']}", level=1
+    )
     add_divider(markdown_children)
-    add_paragraph(markdown_children, "".join(desc for desc in skills_data["desc"]))
+    add_paragraph(
+        markdown_children,
+        "".join(desc for desc in conditions_properties_data["desc"]),
+    )
 
     return markdown_children
