@@ -48,6 +48,7 @@ from src.builds.conditions import build_conditions_database
 from src.builds.alignments import build_alignments_database
 from src.builds.ability_scores import build_ability_scores_database
 from src.builds.proficiencies import build_proficiencies_database
+from src.builds.classes import build_classes_database
 from src.utils.get_keys import get_keys
 from pprint import pprint
 
@@ -69,7 +70,7 @@ def main(args):
     # == Create the Notion client
     notion = Client(auth=args.auth_key)
     # ==
-    # get_keys(logger, f"{DATA_DIRECTORY}", "5e-SRD-Proficiencies.json", "races")
+    #get_keys(logger, f"{DATA_DIRECTORY}", "5e-SRD-Classes.json", "subclasses")
     # == Create the reference page - Needed for nested databases
     args.reference_page_id = create_page_under_page(
         logger, notion, args.database_id, "Reference"
@@ -96,6 +97,7 @@ def main(args):
         "ability-scores": (build_ability_scores_database, "5e-SRD-Ability-Scores.json"),
         # == Most of these rely on references for links
         "creatures": (build_creature_database, "5e-SRD-Monsters.json"),
+        "classes": (build_classes_database, "5e-SRD-Classes.json"),
         "weapons": (build_weapons_database, "5e-SRD-Equipment.json"),
         "armors": (build_armors_database, "5e-SRD-Equipment.json"),
         "items": (build_items_database, "5e-SRD-Equipment.json"),
