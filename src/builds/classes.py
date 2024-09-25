@@ -56,6 +56,7 @@ def classes_page(
     classes_data = load_data(logger, data_directory, json_file)
     features_data = load_data(logger, data_directory, "5e-SRD-Features.json")
     level_data = load_data(logger, data_directory, "5e-SRD-Levels.json")
+    subclasses_data = load_data(logger, data_directory, "5e-SRD-Subclasses.json")
 
     # == Apply range to classes data
     if end is None or end > len(classes_data):
@@ -100,7 +101,7 @@ def classes_page(
 
         # == Building markdown for classes
         children_properties = build_classes_markdown(
-            logger, notion, class_json, features_data, level_data
+            logger, notion, class_json, features_data, level_data, subclasses_data
         )
 
         # == Sending api call
@@ -109,8 +110,7 @@ def classes_page(
             logger, notion, database_id, markdown_properties, children_properties
         )
 
-
-        # == Class Features
+        # == Class Base Features
         # ==========================================================
 
         feature_list = (
@@ -123,16 +123,30 @@ def classes_page(
             else []
         )
 
+        subclass_list = (
+            [
+                sub
+                for sub in subclasses_data
+                if sub["class"]["name"].lower() == class_json["name"].lower()
+            ]
+            if subclasses_data
+            else []
+        )
+
         temp_markdown = []
 
         for feat in feature_list:
+            if feat.get("subclass"):
+                continue
+            if feat["index"].startswith("spellcasting-"):
+                continue
             add_section_heading(temp_markdown, feat["name"], level=2)
             add_paragraph(temp_markdown, f"Level: {feat['level']}")
             add_divider(temp_markdown)
             if feat["desc"]:
                 for f in feat["desc"]:
                     add_paragraph(temp_markdown, f)
-            if len(temp_markdown) >= 90:
+            if len(temp_markdown) >= 80:
                 notion.blocks.children.append(
                     block_id=created_page, children=temp_markdown
                 )
@@ -140,6 +154,60 @@ def classes_page(
 
         if temp_markdown:
             notion.blocks.children.append(block_id=created_page, children=temp_markdown)
+
+        # == Class Base Features
+        # ==========================================================
+
+        temp_markdown = []
+
+        for subclass in subclass_list:
+            add_section_heading(temp_markdown, subclass["name"], level=1)
+            add_divider(temp_markdown)
+            for f in subclass["desc"]:
+                add_paragraph(temp_markdown, f"{f}")
+
+            for feat in feature_list:
+                if feat.get("subclass"):
+                    if feat["subclass"]["name"].lower() == subclass["name"].lower():
+                        add_section_heading(temp_markdown, feat["name"], level=2)
+                        add_paragraph(temp_markdown, f"Level: {feat['level']}")
+                        if feat["desc"]:
+                            for f in feat["desc"]:
+                                add_paragraph(temp_markdown, f)
+                        if len(temp_markdown) >= 80:
+                            notion.blocks.children.append(
+                                block_id=created_page, children=temp_markdown
+                            )
+                            temp_markdown = []
+
+        if temp_markdown:
+            notion.blocks.children.append(block_id=created_page, children=temp_markdown)
+
+        response = notion.blocks.children.list(block_id=created_page)
+        toc = {
+            "object": "block",
+            "type": "table_of_contents",
+            "table_of_contents": {},
+        }
+
+        toggle_block = {
+            "object": "block",
+            "type": "toggle",
+            "toggle": {
+                "rich_text": [
+                    {"type": "text", "text": {"content": "Table of Contents..."}}
+                ],
+                "color": "default",
+                "children": [toc],
+            },
+        }
+
+        # Append the TOC block at the top of the page
+        notion.blocks.children.append(
+            block_id=created_page,
+            children=[toggle_block],
+            after=response["results"][0]["id"],
+        )
 
         sleep(0.5)
 
@@ -195,6 +263,7 @@ def build_classes_markdown(
     classes_prop: object,
     features_data: list,
     levels_data: list,
+    subclasses_data: list,
 ) -> list:
     from src.builds.children_md import (
         add_paragraph,
@@ -217,13 +286,14 @@ def build_classes_markdown(
     # == Adding header at the top
     # ==========
     add_section_heading(markdown_children, f"{classes_prop['name']}", level=1)
-    add_paragraph(markdown_children, f"Hit Die - d{classes_prop['hit_die']}")
+
     add_divider(markdown_children)
     add_section_heading(markdown_children, "Class Features", level=2)
     add_paragraph(
         markdown_children,
         f"As a {classes_prop['name']}, you gain the following class features.",
     )
+    add_paragraph(markdown_children, f"Hit Die - d{classes_prop['hit_die']}")
     # == Adding class features
     add_section_heading(markdown_children, "Proficiencies", level=3)
 
@@ -248,24 +318,21 @@ def build_classes_markdown(
             color="default",
         )
 
+    # == Prof Choices
+    # ==========================================================
+
     for prof in classes_prop["proficiency_choices"]:
         all_thing = []
+
         add_section_heading(markdown_children, f"{prof['desc']}", level=3)
 
         for sub in prof["from"]["options"]:
-            if sub.get("item"):
-                all_thing.append(
-                    add_paragraph_with_mentions(
-                        logger,
-                        notion,
-                        markdown_children,
-                        sub["item"]["name"],
-                        [sub["item"]["name"]],
-                        ret=True,
-                    )
-                )
-
             if sub.get("choice"):
+                add_section_heading(
+                    markdown_children, f"{sub['choice']['desc'].capitalize()}", level=3
+                )
+                all_thing = []
+
                 for op in sub["choice"]["from"]["options"]:
                     all_thing.append(
                         add_paragraph_with_mentions(
@@ -274,9 +341,36 @@ def build_classes_markdown(
                             markdown_children,
                             op["item"]["name"],
                             [op["item"]["name"]],
+                            exclude_tag=["Proficiencies"],
                             ret=True,
                         )
                     )
+
+                if all_thing:
+                    add_expandable_toggle(
+                        markdown_children,
+                        "Click to Expand...",
+                        all_thing,
+                        color="default",
+                    )
+
+            if sub.get("item"):
+                if sub["item"]["name"].startswith("Skill: "):
+                    tag = "Proficiencies"
+                else:
+                    tag = "Items"
+
+                all_thing.append(
+                    add_paragraph_with_mentions(
+                        logger,
+                        notion,
+                        markdown_children,
+                        sub["item"]["name"],
+                        [sub["item"]["name"]],
+                        include_tags=tag,
+                        ret=True,
+                    )
+                )
 
         if all_thing:
             add_expandable_toggle(
@@ -310,13 +404,23 @@ def build_classes_markdown(
     starting_equp.extend(optional_equp)
     add_bulleted_list(markdown_children, starting_equp)
 
-    # == Class Tables - Might be hardcoded for all classes
+    # == Class Tables - Slighty different for each class
     # ==========================================================
     feature_list = (
         [
             feat
-            for feat in levels_data
+            for feat in features_data
             if feat["class"]["name"].lower() == classes_prop["name"].lower()
+        ]
+        if features_data
+        else []
+    )
+
+    level_list = (
+        [
+            level
+            for level in levels_data
+            if level["class"]["name"].lower() == classes_prop["name"].lower()
         ]
         if features_data
         else []
@@ -325,61 +429,69 @@ def build_classes_markdown(
     add_section_heading(markdown_children, f"The {classes_prop['name']}", level=3)
     add_divider(markdown_children)
 
-    # == Fighter Table
-    if feature_list[0]["class"]["name"].lower() == "fighter":
-        header = ["Level", "Proficiency Bonus", "Features"]
+    # == Barbarian Table
+    if level_list[0]["class"]["name"].lower() == "barbarian":
+        header = ["Level", "Proficiency Bonus", "Features", "Rages", "Rage Damage"]
         body = []
-        for feat in feature_list:
-            if feat.get("subclass"):
+        for level in level_list:
+            if level.get("subclass"):
                 continue
-            features_join = ", ".join(feature["name"] for feature in feat["features"])
+
+            features_join = ", ".join(
+                feat["name"] for feat in feature_list if feat["level"] == level["level"]
+            )
+
             body.append(
                 [
-                    f"{ordinal(feat.get('level', ' '))}",
-                    f"+{feat.get('prof_bonus', ' ')}",
+                    f"{ordinal(level.get('level', ' '))}",
+                    f"+{level.get('prof_bonus', ' ')}",
                     f"{" - " if features_join == "" else features_join}",
+                    f"{level['class_specific']['rage_count']}",
+                    f"+{level['class_specific']['rage_damage_bonus']}",
                 ]
             )
 
-    # == Barbarian Table
-    if feature_list[0]["class"]["name"].lower() == "barbarian":
-        header = ["Level", "Proficiency Bonus", "Features", "Rages", "Rage Damage"]
+    # == Fighter Table
+    if level_list[0]["class"]["name"].lower() == "fighter":
+        header = ["Level", "Proficiency Bonus", "Features"]
         body = []
-        for feat in feature_list:
-            if feat.get("subclass"):
+        for level in level_list:
+            if level.get("subclass"):
                 continue
-            features_join = ", ".join(feature["name"] for feature in feat["features"])
+            features_join = ", ".join(
+                feat["name"] for feat in feature_list if feat["level"] == level["level"]
+            )
             body.append(
                 [
-                    f"{ordinal(feat.get('level', ' '))}",
-                    f"+{feat.get('prof_bonus', ' ')}",
+                    f"{ordinal(level.get('level', ' '))}",
+                    f"+{level.get('prof_bonus', ' ')}",
                     f"{" - " if features_join == "" else features_join}",
-                    f"{feat['class_specific']['rage_count']}",
-                    f"+{feat['class_specific']['rage_damage_bonus']}",
                 ]
             )
 
     # == Rogue Table
-    if feature_list[0]["class"]["name"].lower() == "rogue":
+    if level_list[0]["class"]["name"].lower() == "rogue":
         header = ["Level", "Proficiency Bonus", "Sneak Attack", "Features"]
         body = []
-        for feat in feature_list:
-            if feat.get("subclass"):
+        for level in level_list:
+            if level.get("subclass"):
                 continue
 
-            class_specific = feat.get("class_specific", {})
-            features = ", ".join(feature["name"] for feature in feat["features"])
+            class_specific = level.get("class_specific", {})
+            features_join = ", ".join(
+                feat["name"] for feat in feature_list if feat["level"] == level["level"]
+            )
             body.append(
                 [
-                    f"{ordinal(feat['level'])}",
-                    f"+{feat['prof_bonus']}",
+                    f"{ordinal(level['level'])}",
+                    f"+{level['prof_bonus']}",
                     f"{class_specific['sneak_attack']['dice_count']}d{class_specific['sneak_attack']['dice_value']}",
-                    features,
+                    f"{" - " if features_join == "" else features_join}",
                 ]
             )
 
     # == Monk Table
-    if feature_list[0]["class"]["name"].lower() == "monk":
+    if level_list[0]["class"]["name"].lower() == "monk":
         header = [
             "Level",
             "Proficiency Bonus",
@@ -389,16 +501,18 @@ def build_classes_markdown(
             "Features",
         ]
         body = []
-        for feat in feature_list:
-            if feat.get("subclass"):
+        for level in level_list:
+            if level.get("subclass"):
                 continue
-            class_specific = feat.get("class_specific", {})
-            features_join = ", ".join(feature["name"] for feature in feat["features"])
+            class_specific = level.get("class_specific", {})
+            features_join = ", ".join(
+                feat["name"] for feat in feature_list if feat["level"] == level["level"]
+            )
 
             body.append(
                 [
-                    f"{ordinal(feat['level'])}",
-                    f"+{feat['prof_bonus']}",
+                    f"{ordinal(level['level'])}",
+                    f"+{level['prof_bonus']}",
                     f"{class_specific['martial_arts'].get('dice_count')}d{class_specific['martial_arts'].get('dice_value')} ",
                     f"{format_spell_slot(class_specific.get('ki_points'))}",
                     f"+{class_specific.get('unarmored_movement', ' ')} ft.",
@@ -407,7 +521,7 @@ def build_classes_markdown(
             )
 
     # == Bard
-    if feature_list[0]["class"]["name"].lower() == "bard":
+    if level_list[0]["class"]["name"].lower() == "bard":
         header = [
             "Level",
             "Proficiency Bonus",
@@ -425,16 +539,18 @@ def build_classes_markdown(
             "Spell Slots 9th",
         ]
         body = []
-        for feat in feature_list:
-            if feat.get("subclass"):
+        for level in level_list:
+            if level.get("subclass"):
                 continue
-            spellcasting = feat.get("spellcasting", {})
-            features_join = ", ".join(feature["name"] for feature in feat["features"])
+            spellcasting = level.get("spellcasting", {})
+            features_join = ", ".join(
+                feat["name"] for feat in feature_list if feat["level"] == level["level"]
+            )
 
             body.append(
                 [
-                    f"{ordinal(feat['level'])}",
-                    f"+{feat['prof_bonus']}",
+                    f"{ordinal(level['level'])}",
+                    f"+{level['prof_bonus']}",
                     f"{" - " if features_join == "" else features_join}",
                     f"{spellcasting.get('cantrips_known', ' - ')}",
                     f"{spellcasting.get('spells_known', ' - ')}",
@@ -452,7 +568,7 @@ def build_classes_markdown(
 
     # == Cleric + Druid
     table_list1 = ["cleric", "druid", "wizard"]
-    if feature_list[0]["class"]["name"].lower() in table_list1:
+    if level_list[0]["class"]["name"].lower() in table_list1:
         header = [
             "Level",
             "Proficiency Bonus",
@@ -469,15 +585,17 @@ def build_classes_markdown(
             "Spell Slots 9th",
         ]
         body = []
-        for feat in feature_list:
-            if feat.get("subclass"):
+        for level in level_list:
+            if level.get("subclass"):
                 continue
-            spellcasting = feat.get("spellcasting", {})
-            features_join = ", ".join(feature["name"] for feature in feat["features"])
+            spellcasting = level.get("spellcasting", {})
+            features_join = ", ".join(
+                feat["name"] for feat in feature_list if feat["level"] == level["level"]
+            )
             body.append(
                 [
-                    f"{ordinal(feat['level'])}",
-                    f"+{feat['prof_bonus']}",
+                    f"{ordinal(level['level'])}",
+                    f"+{level['prof_bonus']}",
                     f"{" - " if features_join == "" else features_join}",
                     f"{spellcasting.get('cantrips_known', ' - ')}",
                     format_spell_slot(spellcasting.get("spell_slots_level_1", " - ")),
@@ -493,7 +611,7 @@ def build_classes_markdown(
             )
 
     # == Paladin
-    if feature_list[0]["class"]["name"].lower() == "paladin":
+    if level_list[0]["class"]["name"].lower() == "paladin":
         header = [
             "Level",
             "Proficiency Bonus",
@@ -505,16 +623,18 @@ def build_classes_markdown(
             "Spell Slots 5th",
         ]
         body = []
-        for feat in feature_list:
-            if feat.get("subclass"):
+        for level in level_list:
+            if level.get("subclass"):
                 continue
-            spellcasting = feat.get("spellcasting", {})
-            features_join = ", ".join(feature["name"] for feature in feat["features"])
+            spellcasting = level.get("spellcasting", {})
+            features_join = ", ".join(
+                feat["name"] for feat in feature_list if feat["level"] == level["level"]
+            )
 
             body.append(
                 [
-                    f"{ordinal(feat['level'])}",
-                    f"+{feat['prof_bonus']}",
+                    f"{ordinal(level['level'])}",
+                    f"+{level['prof_bonus']}",
                     f"{" - " if features_join == "" else features_join}",
                     format_spell_slot(spellcasting.get("spell_slots_level_1", " - ")),
                     format_spell_slot(spellcasting.get("spell_slots_level_2", " - ")),
@@ -525,7 +645,7 @@ def build_classes_markdown(
             )
 
     # == Ranger
-    if feature_list[0]["class"]["name"].lower() == "ranger":
+    if level_list[0]["class"]["name"].lower() == "ranger":
         header = [
             "Level",
             "Proficiency Bonus",
@@ -538,16 +658,18 @@ def build_classes_markdown(
             "Spell Slots 5th",
         ]
         body = []
-        for feat in feature_list:
-            if feat.get("subclass"):
+        for level in level_list:
+            if level.get("subclass"):
                 continue
-            spellcasting = feat.get("spellcasting", {})
-            features_join = ", ".join(feature["name"] for feature in feat["features"])
+            spellcasting = level.get("spellcasting", {})
+            features_join = ", ".join(
+                feat["name"] for feat in feature_list if feat["level"] == level["level"]
+            )
 
             body.append(
                 [
-                    f"{ordinal(feat['level'])}",
-                    f"+{feat['prof_bonus']}",
+                    f"{ordinal(level['level'])}",
+                    f"+{level['prof_bonus']}",
                     f"{" - " if features_join == "" else features_join}",
                     format_spell_slot(spellcasting.get("spells_known", " - ")),
                     format_spell_slot(spellcasting.get("spell_slots_level_1", " - ")),
@@ -559,7 +681,7 @@ def build_classes_markdown(
             )
 
     # == Sorcerer
-    if feature_list[0]["class"]["name"].lower() == "sorcerer":
+    if level_list[0]["class"]["name"].lower() == "sorcerer":
         header = [
             "Level",
             "Proficiency Bonus",
@@ -578,17 +700,19 @@ def build_classes_markdown(
             "Spell Slots 9th",
         ]
         body = []
-        for feat in feature_list:
-            if feat.get("subclass"):
+        for level in level_list:
+            if level.get("subclass"):
                 continue
-            spellcasting = feat.get("spellcasting", {})
-            class_specific = feat.get("class_specific", {})
-            features_join = ", ".join(feature["name"] for feature in feat["features"])
+            spellcasting = level.get("spellcasting", {})
+            class_specific = level.get("class_specific", {})
+            features_join = ", ".join(
+                feat["name"] for feat in feature_list if feat["level"] == level["level"]
+            )
 
             body.append(
                 [
-                    f"{ordinal(feat['level'])}",
-                    f"+{feat['prof_bonus']}",
+                    f"{ordinal(level['level'])}",
+                    f"+{level['prof_bonus']}",
                     format_spell_slot(class_specific.get("sorcery_points", " - ")),
                     f"{" - " if features_join == "" else features_join}",
                     f"{spellcasting.get('cantrips_known', ' - ')}",
@@ -606,7 +730,7 @@ def build_classes_markdown(
             )
 
     # == Warlock
-    if feature_list[0]["class"]["name"].lower() == "warlock":
+    if level_list[0]["class"]["name"].lower() == "warlock":
         header = [
             "Level",
             "Proficiency Bonus",
@@ -618,12 +742,14 @@ def build_classes_markdown(
             "Invocations Known",
         ]
         body = []
-        for feat in feature_list:
-            if feat.get("subclass"):
+        for level in level_list:
+            if level.get("subclass"):
                 continue
-            spellcasting = feat.get("spellcasting", {})
-            class_specific = feat.get("class_specific", {})
-            features_join = ", ".join(feature["name"] for feature in feat["features"])
+            spellcasting = level.get("spellcasting", {})
+            class_specific = level.get("class_specific", {})
+            features_join = ", ".join(
+                feat["name"] for feat in feature_list if feat["level"] == level["level"]
+            )
             for key, value in spellcasting.items():
                 if key.startswith("spell_slots_level_"):
                     if value != 0:
@@ -632,8 +758,8 @@ def build_classes_markdown(
 
             body.append(
                 [
-                    f"{ordinal(feat['level'])}",
-                    f"+{feat['prof_bonus']}",
+                    f"{ordinal(level['level'])}",
+                    f"+{level['prof_bonus']}",
                     f"{" - " if features_join == "" else features_join}",
                     f"{spellcasting.get('cantrips_known', ' - ')}",
                     f"{spellcasting.get('spells_known', ' - ')}",
@@ -649,6 +775,10 @@ def build_classes_markdown(
     # ==========================================================
     if classes_prop.get("spellcasting"):
         add_section_heading(markdown_children, "Spellcasting", level=1)
+        for f in feature_list:
+            if f["index"].startswith("spellcasting-"):
+                for des in f["desc"]:
+                    add_paragraph(markdown_children, des)
         add_divider(markdown_children)
         for info in classes_prop["spellcasting"]["info"]:
             add_section_heading(markdown_children, info["name"], level=3)

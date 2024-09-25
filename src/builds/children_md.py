@@ -9,6 +9,8 @@ def add_paragraph_with_mentions(
     markdown_children: list,
     text: str,
     mention_keywords: list,
+    exclude_tag: str = "",
+    include_tags: str = "",
     ret=False,
 ) -> Union[None, list]:
     from pprint import pprint
@@ -38,15 +40,45 @@ def add_paragraph_with_mentions(
     for word in split_text:
         if word in mention_keywords:
             # Define the filter for the search query
-            filt = {"value": "page", "property": "object"}
+
+            filt = {
+                "value": "page",
+                "property": "object",
+            }
+
             # logger.info(f"Filter: {filt}")
             # Search for the page to mention
             results = notion.search(query=word, filter=filt).get("results")
             # pprint(f"results: {results}")
-            if len(results) == 0:
+
+            if include_tags or exclude_tag:
+                filtered_results = [
+                    res
+                    for res in results
+                    if (
+                        include_tags == ""
+                        or res["properties"]
+                        .get("5E Category", {})
+                        .get("select", {})
+                        .get("name")
+                        == include_tags
+                    )
+                    and (
+                        exclude_tag == ""
+                        or res["properties"]
+                        .get("5E Category", {})
+                        .get("select", {})
+                        .get("name")
+                        != exclude_tag
+                    )
+                ]
+            else:
+                filtered_results = results
+
+            if len(filtered_results) == 0:
                 rich_text.append({"type": "text", "text": {"content": word}})
             else:
-                for res in results:
+                for res in filtered_results:
                     if res["properties"].get("Name"):
                         captured_word = res["properties"]["Name"]["title"][0]["text"][
                             "content"
@@ -59,6 +91,7 @@ def add_paragraph_with_mentions(
                                     "mention": {"page": {"id": mentioned_page_id}},
                                 }
                             )
+
         else:
             rich_text.append({"type": "text", "text": {"content": word}})
 
