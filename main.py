@@ -75,9 +75,6 @@ def main(args):
     args.reference_page_id = create_page_under_page(
         logger, notion, args.database_id, "Reference"
     )
-    args.character_ref_page_id = create_page_under_page(
-        logger, notion, args.database_id, "Character Reference"
-    )
     # Define a mapping of database names to their corresponding build functions and JSON files
     database_builders = {
         # == References first

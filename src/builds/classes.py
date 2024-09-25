@@ -109,19 +109,7 @@ def classes_page(
             logger, notion, database_id, markdown_properties, children_properties
         )
 
-        """
-        list_of_desc = features_data["desc"].split("\n")
-        temp = []
 
-        for desc in list_of_desc:
-            add_paragraph(temp, desc)
-            if len(temp) >= 100:
-                notion.blocks.children.append(block_id=created_page, children=temp)
-                temp = []
-
-        # Append any remaining elements in temp
-
-        """
         # == Class Features
         # ==========================================================
 
@@ -344,11 +332,12 @@ def build_classes_markdown(
         for feat in feature_list:
             if feat.get("subclass"):
                 continue
+            features_join = ", ".join(feature["name"] for feature in feat["features"])
             body.append(
                 [
                     f"{ordinal(feat.get('level', ' '))}",
                     f"+{feat.get('prof_bonus', ' ')}",
-                    f"{' '.join(feat['name'] for feat in feat['features'])}",
+                    f"{" - " if features_join == "" else features_join}",
                 ]
             )
 
@@ -359,11 +348,12 @@ def build_classes_markdown(
         for feat in feature_list:
             if feat.get("subclass"):
                 continue
+            features_join = ", ".join(feature["name"] for feature in feat["features"])
             body.append(
                 [
                     f"{ordinal(feat.get('level', ' '))}",
                     f"+{feat.get('prof_bonus', ' ')}",
-                    f"{' '.join(feat['name'] for feat in feat['features'])}",
+                    f"{" - " if features_join == "" else features_join}",
                     f"{feat['class_specific']['rage_count']}",
                     f"+{feat['class_specific']['rage_damage_bonus']}",
                 ]
@@ -403,6 +393,8 @@ def build_classes_markdown(
             if feat.get("subclass"):
                 continue
             class_specific = feat.get("class_specific", {})
+            features_join = ", ".join(feature["name"] for feature in feat["features"])
+
             body.append(
                 [
                     f"{ordinal(feat['level'])}",
@@ -410,7 +402,7 @@ def build_classes_markdown(
                     f"{class_specific['martial_arts'].get('dice_count')}d{class_specific['martial_arts'].get('dice_value')} ",
                     f"{format_spell_slot(class_specific.get('ki_points'))}",
                     f"+{class_specific.get('unarmored_movement', ' ')} ft.",
-                    ", ".join(feature["name"] for feature in feat["features"]),
+                    f"{" - " if features_join == "" else features_join}",
                 ]
             )
 
@@ -437,12 +429,13 @@ def build_classes_markdown(
             if feat.get("subclass"):
                 continue
             spellcasting = feat.get("spellcasting", {})
+            features_join = ", ".join(feature["name"] for feature in feat["features"])
 
             body.append(
                 [
                     f"{ordinal(feat['level'])}",
                     f"+{feat['prof_bonus']}",
-                    f"{' '.join(feat['name'] for feat in feat['features'])}",
+                    f"{" - " if features_join == "" else features_join}",
                     f"{spellcasting.get('cantrips_known', ' - ')}",
                     f"{spellcasting.get('spells_known', ' - ')}",
                     format_spell_slot(spellcasting.get("spell_slots_level_1", " - ")),
@@ -480,12 +473,12 @@ def build_classes_markdown(
             if feat.get("subclass"):
                 continue
             spellcasting = feat.get("spellcasting", {})
-
+            features_join = ", ".join(feature["name"] for feature in feat["features"])
             body.append(
                 [
                     f"{ordinal(feat['level'])}",
                     f"+{feat['prof_bonus']}",
-                    f"{' '.join(feat['name'] for feat in feat['features'])}",
+                    f"{" - " if features_join == "" else features_join}",
                     f"{spellcasting.get('cantrips_known', ' - ')}",
                     format_spell_slot(spellcasting.get("spell_slots_level_1", " - ")),
                     format_spell_slot(spellcasting.get("spell_slots_level_2", " - ")),
@@ -516,12 +509,13 @@ def build_classes_markdown(
             if feat.get("subclass"):
                 continue
             spellcasting = feat.get("spellcasting", {})
+            features_join = ", ".join(feature["name"] for feature in feat["features"])
 
             body.append(
                 [
                     f"{ordinal(feat['level'])}",
                     f"+{feat['prof_bonus']}",
-                    f"{' '.join(feat['name'] for feat in feat['features'])}",
+                    f"{" - " if features_join == "" else features_join}",
                     format_spell_slot(spellcasting.get("spell_slots_level_1", " - ")),
                     format_spell_slot(spellcasting.get("spell_slots_level_2", " - ")),
                     format_spell_slot(spellcasting.get("spell_slots_level_3", " - ")),
@@ -548,12 +542,13 @@ def build_classes_markdown(
             if feat.get("subclass"):
                 continue
             spellcasting = feat.get("spellcasting", {})
+            features_join = ", ".join(feature["name"] for feature in feat["features"])
 
             body.append(
                 [
                     f"{ordinal(feat['level'])}",
                     f"+{feat['prof_bonus']}",
-                    f"{' '.join(feat['name'] for feat in feat['features'])}",
+                    f"{" - " if features_join == "" else features_join}",
                     format_spell_slot(spellcasting.get("spells_known", " - ")),
                     format_spell_slot(spellcasting.get("spell_slots_level_1", " - ")),
                     format_spell_slot(spellcasting.get("spell_slots_level_2", " - ")),
@@ -588,13 +583,14 @@ def build_classes_markdown(
                 continue
             spellcasting = feat.get("spellcasting", {})
             class_specific = feat.get("class_specific", {})
+            features_join = ", ".join(feature["name"] for feature in feat["features"])
 
             body.append(
                 [
                     f"{ordinal(feat['level'])}",
                     f"+{feat['prof_bonus']}",
                     format_spell_slot(class_specific.get("sorcery_points", " - ")),
-                    ", ".join(feature["name"] for feature in feat["features"]),
+                    f"{" - " if features_join == "" else features_join}",
                     f"{spellcasting.get('cantrips_known', ' - ')}",
                     f"{spellcasting.get('spells_known', ' - ')}",
                     f"{spellcasting.get('spell_slots_level_1', ' - ')}",
@@ -627,16 +623,22 @@ def build_classes_markdown(
                 continue
             spellcasting = feat.get("spellcasting", {})
             class_specific = feat.get("class_specific", {})
+            features_join = ", ".join(feature["name"] for feature in feat["features"])
+            for key, value in spellcasting.items():
+                if key.startswith("spell_slots_level_"):
+                    if value != 0:
+                        spell_level = int(key[-1])
+                        spell_slot = value
 
             body.append(
                 [
-                    f"{feat['level']}",
+                    f"{ordinal(feat['level'])}",
                     f"+{feat['prof_bonus']}",
-                    ", ".join(feature["name"] for feature in feat["features"]),
+                    f"{" - " if features_join == "" else features_join}",
                     f"{spellcasting.get('cantrips_known', ' - ')}",
                     f"{spellcasting.get('spells_known', ' - ')}",
-                    f"{spellcasting.get('spell_slots_level_1', ' - ')}",
-                    f"{class_specific.get('spell_slot_level', ' - ')}",
+                    f"{spell_slot}",
+                    f"{ordinal(spell_level)}",
                     format_spell_slot(class_specific.get("invocations_known", " - ")),
                 ]
             )
