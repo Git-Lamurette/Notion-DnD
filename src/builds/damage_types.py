@@ -9,9 +9,7 @@ if TYPE_CHECKING:
 
 
 def build_damage_types_database(logger, notion, data_directory, json_file, args):
-    damage_types_prop_db = damage_types_properties_db(
-        logger, notion, args.reference_page_id
-    )
+    damage_types_prop_db = damage_types_properties_db(logger, notion, args.database_id)
     damage_types_properties_page(
         logger,
         notion,

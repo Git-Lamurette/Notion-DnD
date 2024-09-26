@@ -8,20 +8,20 @@ if TYPE_CHECKING:
     from notion_client import client
 
 
-def build_weapon_properties_database(logger, notion, data_directory, json_file, args):
-    weapons_prop_db = weapons_properties_db(logger, notion, args.database_id)
-    weapons_properties_page(
+def build_backgrounds_database(logger, notion, data_directory, json_file, args):
+    backgrounds_db_id = backgrounds_db(logger, notion, args.database_id)
+    backgrounds_page(
         logger,
         notion,
         data_directory,
         json_file,
-        weapons_prop_db,
+        backgrounds_db_id,
         args.start_range,
         args.end_range,
     )
 
 
-def weapons_properties_page(
+def backgrounds_page(
     logger: "logging.Logger",
     notion: "client",
     data_directory: str,
@@ -31,7 +31,7 @@ def weapons_properties_page(
     end: Union[None, int],
 ) -> None:
     """This generates the api calls needed for Notion. This parses the JSON and build the markdown body for the API call.
-    It iterates through each weapon properties in the json depending on params.
+    It iterates through each backgrounds in the json depending on params.
 
     Args:
         logger (logging.Logger): Logging object
@@ -41,49 +41,39 @@ def weapons_properties_page(
         start (int): If you want to only capture a range specify the start
         end (Union[None, int]): If you want to only capture a range specify the end
     """
-    # == Get weapon properties Data
-    weapons_properties_data = load_data(logger, data_directory, json_file)
+    # == Get backgrounds Data
+    backgrounds_data = load_data(logger, data_directory, json_file)
 
-    # == Apply range to weapon properties data
-    if end is None or end > len(weapons_properties_data):
-        end = len(weapons_properties_data)
+    # == Apply range to backgrounds data
+    if end is None or end > len(backgrounds_data):
+        end = len(backgrounds_data)
 
-    # == Iterates through the specified range of the weapon properties JSON
+    # == Iterates through the specified range of the backgrounds JSON
     for index in range(start, end):
-        selected_prop = weapons_properties_data[index]
+        backgrounds_data = backgrounds_data[index]
 
         logger.info(
-            f"Building Markdown for weapon properties -- {selected_prop['name']} -- Index -- {index} --"
+            f"Building Markdown for backgrounds -- {backgrounds_data['name']} -- Index -- {index} --"
         )
 
-        # == Building markdown properties from _weapon properties class
+        # == Building markdown properties from _backgrounds class
         markdown_properties = {
             "Name": {
                 "title": [
                     {
                         "type": "text",
-                        "text": {"content": selected_prop["name"]},
+                        "text": {"content": backgrounds_data["name"]},
                     }
                 ]
             },
-            "5E Category": {"select": {"name": "Weapon Properties"}},
-            "Description": {
-                "rich_text": [
-                    {
-                        "type": "text",
-                        "text": {
-                            "content": "".join(mn for mn in selected_prop["desc"])
-                        },
-                    }
-                ]
-            },
+            "5E Category": {"select": {"name": "Backgrounds"}},
         }
 
         # == Ensure children_properties list is empty
         children_properties = []
 
-        # == Building markdown for weapon properties
-        children_properties = build_weapons_properties_markdown(selected_prop)
+        # == Building markdown for backgrounds
+        children_properties = build_backgrounds_markdown(backgrounds_data)
 
         # == Sending api call
         # ==========
@@ -94,9 +84,7 @@ def weapons_properties_page(
         sleep(0.5)
 
 
-def weapons_properties_db(
-    logger: "logging.Logger", notion: "client", database_id: str
-) -> str:
+def backgrounds_db(logger: "logging.Logger", notion: "client", database_id: str) -> str:
     """This generates the api calls needed for Notion. This just builds the empty database page with the required options.
 
     Args:
@@ -109,18 +97,13 @@ def weapons_properties_db(
     """
 
     # == Database Name
-    database_name = "Weapon Properties"
+    database_name = "Backgrounds"
 
     # == Building markdown database properties
     database_weapon_properties = {
         "Name": {"title": {}},
-        "Description": {"rich_text": {}},
         "5E Category": {
-            "select": {
-                "options": [
-                    {"name": "Weapon Properties", "color": "blue"},
-                ]
-            }
+            "select": {"options": [{"name": "Backgrounds", "color": "green"}]}
         },
     }
 
@@ -129,7 +112,7 @@ def weapons_properties_db(
     )
 
 
-def build_weapons_properties_markdown(weapons_properties_data: object) -> list:
+def build_backgrounds_markdown(backgrounds_data: object) -> list:
     from src.builds.children_md import (
         add_paragraph,
         add_section_heading,
@@ -145,12 +128,7 @@ def build_weapons_properties_markdown(weapons_properties_data: object) -> list:
 
     # == Adding header at the top
     # ==========
-    add_section_heading(
-        markdown_children, f"{weapons_properties_data['name']}", level=1
-    )
+    add_section_heading(markdown_children, f"{backgrounds_data['name']}", level=1)
     add_divider(markdown_children)
-    add_paragraph(
-        markdown_children, "".join(desc for desc in weapons_properties_data["desc"])
-    )
 
     return markdown_children

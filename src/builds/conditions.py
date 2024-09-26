@@ -9,9 +9,7 @@ if TYPE_CHECKING:
 
 
 def build_conditions_database(logger, notion, data_directory, json_file, args):
-    conditions_prop_db = conditions_properties_db(
-        logger, notion, args.reference_page_id
-    )
+    conditions_prop_db = conditions_properties_db(logger, notion, args.database_id)
     conditions_properties_page(
         logger,
         notion,

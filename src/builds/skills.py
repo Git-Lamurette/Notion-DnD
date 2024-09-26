@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 def build_skills_database(logger, notion, data_directory, json_file, args):
-    skills_db_id = skills_db(logger, notion, args.reference_page_id)
+    skills_db_id = skills_db(logger, notion, args.database_id)
     skills_page(
         logger,
         notion,

@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 def build_ability_scores_database(logger, notion, data_directory, json_file, args):
-    ability_scores_db_id = ability_scores_db(logger, notion, args.reference_page_id)
+    ability_scores_db_id = ability_scores_db(logger, notion, args.database_id)
     ability_scores_page(
         logger,
         notion,

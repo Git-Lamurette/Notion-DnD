@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 def build_proficiencies_database(logger, notion, data_directory, json_file, args):
-    proficiencies_db_id = proficiencies_db(logger, notion, args.reference_page_id)
+    proficiencies_db_id = proficiencies_db(logger, notion, args.database_id)
     proficiencies_page(
         logger,
         notion,
@@ -178,7 +178,7 @@ def build_proficiencies_markdown(
         add_paragraph,
         add_section_heading,
         add_divider,
-        add_table
+        add_table,
     )
     # == This is all of the building of the api call for
     # == the markdown body
@@ -188,22 +188,19 @@ def build_proficiencies_markdown(
     # ==========
     markdown_children = []
 
-
     add_section_heading(markdown_children, f"{proficiencies_data['name']}", level=1)
     add_divider(markdown_children)
     if proficiencies_data["classes"]:
-
         header = []
-        header.extend(clas['name'] for clas in proficiencies_data["classes"])
+        header.extend(clas["name"] for clas in proficiencies_data["classes"])
         # == Adding header at the tocp
         # ==========
         add_section_heading(markdown_children, "Proficient Classes", level=2)
         add_table(markdown_children, header)
 
-
     if proficiencies_data["races"]:
         header = []
-        header.extend(clas['name'] for clas in proficiencies_data["races"])
+        header.extend(clas["name"] for clas in proficiencies_data["races"])
         # == Adding header at the tocp
         # ==========
         add_section_heading(markdown_children, "Proficient races", level=2)

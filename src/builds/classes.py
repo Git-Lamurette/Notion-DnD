@@ -34,11 +34,7 @@ def classes_page(
     from src.builds.children_md import (
         add_paragraph,
         add_section_heading,
-        add_table,
         add_divider,
-        add_paragraph_with_mentions,
-        add_expandable_toggle,
-        add_bulleted_list,
     )
 
     """This generates the api calls needed for Notion. This parses the JSON and build the markdown body for the API call.
@@ -274,7 +270,6 @@ def build_classes_markdown(
         add_expandable_toggle,
         add_bulleted_list,
     )
-    from pprint import pprint
     # == This is all of the building of the api call for
     # == the markdown body
     # =======================================================

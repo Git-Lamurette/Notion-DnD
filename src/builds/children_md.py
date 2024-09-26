@@ -13,8 +13,6 @@ def add_paragraph_with_mentions(
     include_tags: str = "",
     ret=False,
 ) -> Union[None, list]:
-    from pprint import pprint
-
     """Add a paragraph with mentions of specific keywords
 
     Args:

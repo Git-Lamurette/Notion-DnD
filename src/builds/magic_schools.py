@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 def build_magic_schools_database(logger, notion, data_directory, json_file, args):
-    magic_schools_db_id = magic_schools_db(logger, notion, args.reference_page_id)
+    magic_schools_db_id = magic_schools_db(logger, notion, args.database_id)
     magic_schools_page(
         logger,
         notion,

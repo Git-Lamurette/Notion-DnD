@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 def build_rules_database(logger, notion, data_directory, json_file, args):
-    rules_prop_db = rules_properties_db(logger, notion, args.reference_page_id)
+    rules_prop_db = rules_properties_db(logger, notion, args.database_id)
     rules_properties_page(
         logger,
         notion,

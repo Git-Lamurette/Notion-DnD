@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 def build_languages_database(logger, notion, data_directory, json_file, args):
-    languages_prop_db = languages_properties_db(logger, notion, args.reference_page_id)
+    languages_prop_db = languages_properties_db(logger, notion, args.database_id)
     languages_properties_page(
         logger,
         notion,

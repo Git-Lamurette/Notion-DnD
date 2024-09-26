@@ -9,9 +9,7 @@ if TYPE_CHECKING:
 
 
 def build_alignments_database(logger, notion, data_directory, json_file, args):
-    alignments_prop_db = alignments_properties_db(
-        logger, notion, args.reference_page_id
-    )
+    alignments_prop_db = alignments_properties_db(logger, notion, args.database_id)
     alignments_properties_page(
         logger,
         notion,
