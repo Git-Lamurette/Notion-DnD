@@ -201,7 +201,6 @@ def build_creature_markdown(creature: object) -> list:
     )
     add_paragraph(markdown_children, f"Armor Class : {creature.get_armor()}")
     add_paragraph(markdown_children, f"Speed : {creature.get_speed()}")
-    add_divider(markdown_children)
 
     # == Attributes
     # ==========
@@ -222,7 +221,6 @@ def build_creature_markdown(creature: object) -> list:
         f"{str(creature.charisma)} ({ability_modifier(creature.charisma)})",
     ]
     add_table(markdown_children, stats_table_headers, [stats_table_row])
-    add_divider(markdown_children)
 
     # == Proficiencies
     # ==========
@@ -270,53 +268,47 @@ def build_creature_markdown(creature: object) -> list:
         markdown_children,
         f"Challenge Rating: {creature.challenge_rating} ({creature.xp})    Proficiency Bonus: +{creature.proficiency_bonus}",
     )
-    add_divider(markdown_children)
 
-    # == Special Abilitites
+    # == Special Abilities
     # ==========
     special_ability = creature.get_special_abilities()
     if special_ability:
-        add_section_heading(markdown_children, "Abilitites", level=2)
+        add_section_heading(markdown_children, "Abilities", level=3)
         add_divider(markdown_children)
         for x in special_ability:
             add_paragraph(markdown_children, f"{x}")
-        add_divider(markdown_children)
 
     # == Spellcasting
     # ==========
     spell_ability = creature.get_spellcasting()
     if spell_ability:
-        add_section_heading(markdown_children, "Spellcasting", level=2)
+        add_section_heading(markdown_children, "Spellcasting", level=3)
         add_divider(markdown_children)
         add_paragraph(markdown_children, spell_ability)
-        add_divider(markdown_children)
 
     # == Actions
     # ==========
     actions = creature.get_actions()
     if actions:
-        add_section_heading(markdown_children, "Actions", level=2)
+        add_section_heading(markdown_children, "Actions", level=3)
         add_divider(markdown_children)
         for x in actions:
             add_paragraph(markdown_children, f"{x}")
-        add_divider(markdown_children)
 
     # == Legendary Actions
     # ==========
     legendary_action = creature.get_legendary_actions()
     if legendary_action:
-        add_section_heading(markdown_children, "Legendary Actions", level=2)
+        add_section_heading(markdown_children, "Legendary Actions", level=3)
         add_divider(markdown_children)
         for x in legendary_action:
             add_paragraph(markdown_children, f"{x}")
-        add_divider(markdown_children)
 
     # == Description
     # ==========
     if creature.desc:
-        add_section_heading(markdown_children, "Description", level=2)
+        add_section_heading(markdown_children, "Description", level=3)
         add_divider(markdown_children)
         add_paragraph(markdown_children, f"{creature.desc}")
-        add_divider(markdown_children)
 
     return markdown_children

@@ -3,6 +3,103 @@ import re
 from typing import Union
 
 
+def get_rich_paragraph(content, bold=False, italic=False, underline=False):
+    return {
+        "type": "text",
+        "text": {"content": content},
+        "annotations": {"bold": bold, "italic": italic, "underline": underline},
+    }
+
+
+def add_paragraph_block(rich_text_elements: list) -> None:
+    """Add a paragraph block to the children blocks.
+
+    Args:
+        markdown_children (list): Your markdown list that contains all elements so far
+        rich_text_elements (list): A list of rich text elements
+    """
+    return {
+        "object": "block",
+        "type": "paragraph",
+        "paragraph": {"rich_text": rich_text_elements},
+    }
+
+
+def get_mention(
+    notion: Client,
+    text: str,
+    exclude_tag: str = "",
+    include_tags: str = "",
+    value_type: str = "page",
+) -> Union[None, list]:
+    rich_text = []
+
+    filt = {
+        "value": value_type,
+        "property": "object",
+    }
+
+    # logger.info(f"Filter: {filt}")
+    # Search for the page to mention
+    results = notion.search(query=text, filter=filt).get("results")
+    # pprint(f"results: {results}")
+
+    if include_tags or exclude_tag:
+        filtered_results = [
+            res
+            for res in results
+            if (
+                include_tags == ""
+                or res["properties"]
+                .get("5E Category", {})
+                .get("select", {})
+                .get("name")
+                == include_tags
+            )
+            and (
+                exclude_tag == ""
+                or res["properties"]
+                .get("5E Category", {})
+                .get("select", {})
+                .get("name")
+                != exclude_tag
+            )
+        ]
+    else:
+        filtered_results = results
+
+    if len(filtered_results) == 0:
+        rich_text.append({"type": "text", "text": {"content": text}})
+    else:
+        for res in filtered_results:
+            if value_type == "page":
+                if res["properties"].get("Name"):
+                    captured_word = res["properties"]["Name"]["title"][0]["text"][
+                        "content"
+                    ]
+                    if text.lower() == captured_word.lower():
+                        mentioned_page_id = res["id"]
+                        rich_text.append(
+                            {
+                                "type": "mention",
+                                "mention": {"page": {"id": mentioned_page_id}},
+                            }
+                        )
+            elif value_type == "database":
+                if res.get("title"):
+                    captured_word = res["title"][0]["plain_text"]
+                    if text.lower() == captured_word.lower():
+                        mentioned_database_id = res["id"]
+                        rich_text.append(
+                            {
+                                "type": "mention",
+                                "mention": {"database": {"id": mentioned_database_id}},
+                            }
+                        )
+
+    return rich_text
+
+
 def add_paragraph_with_mentions(
     logger,
     notion: Client,
@@ -11,6 +108,7 @@ def add_paragraph_with_mentions(
     mention_keywords: list,
     exclude_tag: str = "",
     include_tags: str = "",
+    value_type: str = "page",
     ret=False,
 ) -> Union[None, list]:
     """Add a paragraph with mentions of specific keywords
@@ -40,7 +138,7 @@ def add_paragraph_with_mentions(
             # Define the filter for the search query
 
             filt = {
-                "value": "page",
+                "value": value_type,
                 "property": "object",
             }
 
@@ -77,18 +175,32 @@ def add_paragraph_with_mentions(
                 rich_text.append({"type": "text", "text": {"content": word}})
             else:
                 for res in filtered_results:
-                    if res["properties"].get("Name"):
-                        captured_word = res["properties"]["Name"]["title"][0]["text"][
-                            "content"
-                        ]
-                        if word.lower() == captured_word.lower():
-                            mentioned_page_id = res["id"]
-                            rich_text.append(
-                                {
-                                    "type": "mention",
-                                    "mention": {"page": {"id": mentioned_page_id}},
-                                }
-                            )
+                    if value_type == "page":
+                        if res["properties"].get("Name"):
+                            captured_word = res["properties"]["Name"]["title"][0][
+                                "text"
+                            ]["content"]
+                            if word.lower() == captured_word.lower():
+                                mentioned_page_id = res["id"]
+                                rich_text.append(
+                                    {
+                                        "type": "mention",
+                                        "mention": {"page": {"id": mentioned_page_id}},
+                                    }
+                                )
+                    elif value_type == "database":
+                        if res.get("title"):
+                            captured_word = res["title"][0]["plain_text"]
+                            if word.lower() == captured_word.lower():
+                                mentioned_database_id = res["id"]
+                                rich_text.append(
+                                    {
+                                        "type": "mention",
+                                        "mention": {
+                                            "database": {"id": mentioned_database_id}
+                                        },
+                                    }
+                                )
 
         else:
             rich_text.append({"type": "text", "text": {"content": word}})
@@ -107,7 +219,7 @@ def add_paragraph_with_mentions(
     return None
 
 
-def add_paragraph(markdown_children: list, text: str) -> None:
+def add_paragraph(markdown_children: list, text: str, rich_text: list = []) -> None:
     """Add a paragraph to the markdown children list with formatting checks.
 
     Args:

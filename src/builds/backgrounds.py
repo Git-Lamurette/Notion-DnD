@@ -73,7 +73,9 @@ def backgrounds_page(
         children_properties = []
 
         # == Building markdown for backgrounds
-        children_properties = build_backgrounds_markdown(backgrounds_data)
+        children_properties = build_backgrounds_markdown(
+            logger, notion, backgrounds_data
+        )
 
         # == Sending api call
         # ==========
@@ -112,11 +114,16 @@ def backgrounds_db(logger: "logging.Logger", notion: "client", database_id: str)
     )
 
 
-def build_backgrounds_markdown(backgrounds_data: object) -> list:
+def build_backgrounds_markdown(
+    logger: "logging.Logger",
+    notion: "client",
+    backgrounds_data: object,
+) -> list:
     from src.builds.children_md import (
         add_paragraph,
         add_section_heading,
         add_divider,
+        add_bulleted_list,
     )
     # == This is all of the building of the api call for
     # == the markdown body
@@ -131,4 +138,69 @@ def build_backgrounds_markdown(backgrounds_data: object) -> list:
     add_section_heading(markdown_children, f"{backgrounds_data['name']}", level=1)
     add_divider(markdown_children)
 
+    add_paragraph(
+        markdown_children,
+        f"**Skill Proficiencies:** {", ".join(prof['name'] for prof in backgrounds_data['starting_proficiencies'])}",
+    )
+
+    equip_op = [
+        item["from"]["equipment_category"]["name"]
+        for item in backgrounds_data["starting_equipment_options"]
+    ]
+    equp = [
+        prof["equipment"]["name"] for prof in backgrounds_data["starting_equipment"]
+    ]
+
+    equp.extend(equip_op)
+
+    add_paragraph(
+        markdown_children,
+        f"**Equipment:**  {", ".join(equp)}",
+    )
+
+    add_section_heading(
+        markdown_children, f"{backgrounds_data['feature']["name"]}", level=2
+    )
+    add_paragraph(
+        markdown_children,
+        f"{". ".join(desc for desc in backgrounds_data['feature']['desc'])}",
+        notion,
+    )
+    add_section_heading(markdown_children, "Suggested Characteristics", level=2)
+
+    add_section_heading(markdown_children, "Personality Traits", level=3)
+    add_paragraph(
+        markdown_children, f" Select {backgrounds_data['personality_traits']['choose']}"
+    )
+    add_bulleted_list(
+        markdown_children,
+        [
+            option["string"]
+            for option in backgrounds_data["personality_traits"]["from"]["options"]
+        ],
+    )
+
+    add_section_heading(markdown_children, "Ideals", level=3)
+    add_paragraph(markdown_children, f" Select {backgrounds_data['ideals']['choose']}")
+    add_bulleted_list(
+        markdown_children,
+        [
+            f"{option["desc"]} - {option['alignments'][0]['name']}"
+            for option in backgrounds_data["ideals"]["from"]["options"]
+        ],
+    )
+
+    add_section_heading(markdown_children, "Bonds", level=3)
+    add_paragraph(markdown_children, f" Select {backgrounds_data['bonds']['choose']}")
+    add_bulleted_list(
+        markdown_children,
+        [option["string"] for option in backgrounds_data["bonds"]["from"]["options"]],
+    )
+
+    add_section_heading(markdown_children, "Flaws", level=3)
+    add_paragraph(markdown_children, f" Select {backgrounds_data['flaws']['choose']}")
+    add_bulleted_list(
+        markdown_children,
+        [option["string"] for option in backgrounds_data["flaws"]["from"]["options"]],
+    )
     return markdown_children

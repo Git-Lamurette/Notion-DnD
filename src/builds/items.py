@@ -198,6 +198,7 @@ def build_items_markdown(
     # == Adding header at the top
     # ==========
     add_section_heading(markdown_children, f"{equipment.name}", level=1)
+    add_divider(markdown_children)
     headers = [
         f"Type: {equipment.equipment_category['name']}",
         f"Cost: {equipment.cost['quantity']} {equipment.cost['unit']}",

@@ -8,20 +8,20 @@ if TYPE_CHECKING:
     from notion_client import client
 
 
-def build_ability_scores_database(logger, notion, data_directory, json_file, args):
-    ability_scores_db_id = ability_scores_db(logger, notion, args.database_id)
-    ability_scores_page(
+def build_feats_database(logger, notion, data_directory, json_file, args):
+    feats_db_id = feats_db(logger, notion, args.database_id)
+    feats_page(
         logger,
         notion,
         data_directory,
         json_file,
-        ability_scores_db_id,
+        feats_db_id,
         args.start_range,
         args.end_range,
     )
 
 
-def ability_scores_page(
+def feats_page(
     logger: "logging.Logger",
     notion: "client",
     data_directory: str,
@@ -31,7 +31,7 @@ def ability_scores_page(
     end: Union[None, int],
 ) -> None:
     """This generates the api calls needed for Notion. This parses the JSON and build the markdown body for the API call.
-    It iterates through each ability_scores in the json depending on params.
+    It iterates through each feats in the json depending on params.
 
     Args:
         logger (logging.Logger): Logging object
@@ -41,55 +41,50 @@ def ability_scores_page(
         start (int): If you want to only capture a range specify the start
         end (Union[None, int]): If you want to only capture a range specify the end
     """
-    # == Get ability_scores Data
-    ability_scores_data = load_data(logger, data_directory, json_file)
+    # == Get feats Data
+    feats_data = load_data(logger, data_directory, json_file)
 
-    # == Apply range to ability_scores data
-    if end is None or end > len(ability_scores_data):
-        end = len(ability_scores_data)
+    # == Apply range to feats data
+    if end is None or end > len(feats_data):
+        end = len(feats_data)
 
-    # == Iterates through the specified range of the ability_scores JSON
+    # == Iterates through the specified range of the feats JSON
     for index in range(start, end):
-        selected_skill = ability_scores_data[index]
+        feats_data = feats_data[index]
 
         logger.info(
-            f"Building Markdown for ability_scores -- {selected_skill['name']} -- Index -- {index} --"
+            f"Building Markdown for Feats -- {feats_data['name']} -- Index -- {index} --"
         )
 
-        # == Building markdown properties from _ability_scores class
+        # == Building markdown properties from _feats class
         markdown_properties = {
             "Name": {
                 "title": [
                     {
                         "type": "text",
-                        "text": {"content": selected_skill["full_name"]},
+                        "text": {"content": feats_data["name"]},
                     }
                 ]
             },
-            "5E Category": {"select": {"name": "Ability Scores"}},
-            "Skills": {
-                "multi_select": [
-                    {"name": f"{x['name']}"} for x in selected_skill["skills"]
-                ]
-            },
-            "Description": {
+            "Requirements": {
                 "rich_text": [
                     {
                         "type": "text",
                         "text": {
-                            "content": "".join(mn for mn in selected_skill["desc"])
+                            "content": f"{feats_data['ability_score']['name']} {feats_data['minimum_score']}"
+                            for feats_data in feats_data["prerequisites"]
                         },
                     }
                 ]
             },
+            "5E Category": {"select": {"name": "Feats"}},
         }
+
         # == Ensure children_properties list is empty
         children_properties = []
 
-        # == Building markdown for ability_scores
-        children_properties = build_ability_scores_markdown(
-            logger, notion, selected_skill
-        )
+        # == Building markdown for feats
+        children_properties = build_feats_markdown(logger, notion, feats_data)
 
         # == Sending api call
         # ==========
@@ -100,9 +95,7 @@ def ability_scores_page(
         sleep(0.5)
 
 
-def ability_scores_db(
-    logger: "logging.Logger", notion: "client", database_id: str
-) -> str:
+def feats_db(logger: "logging.Logger", notion: "client", database_id: str) -> str:
     """This generates the api calls needed for Notion. This just builds the empty database page with the required options.
 
     Args:
@@ -115,27 +108,13 @@ def ability_scores_db(
     """
 
     # == Database Name
-    database_name = "Ability Scores"
+    database_name = "Feats"
 
     # == Building markdown database properties
     database_weapon_properties = {
         "Name": {"title": {}},
-        "Description": {"rich_text": {}},
-        "Skills": {
-            "multi_select": {
-                "options": [
-                    {"name": "Strength", "color": "gray"},
-                    {"name": "Dexterity", "color": "blue"},
-                    {"name": "Constitution", "color": "red"},
-                    {"name": "Intelligence", "color": "pink"},
-                    {"name": "Wisdom", "color": "purple"},
-                    {"name": "Charisma", "color": "brown"},
-                ]
-            }
-        },
-        "5E Category": {
-            "select": {"options": [{"name": "Ability Scores", "color": "green"}]}
-        },
+        "Requirements": {"rich_text": {}},
+        "5E Category": {"select": {"options": [{"name": "Feats", "color": "green"}]}},
     }
 
     return create_database(
@@ -143,14 +122,15 @@ def ability_scores_db(
     )
 
 
-def build_ability_scores_markdown(
-    logger: "logging.Logger", notion: "client", ability_scores_data: object
+def build_feats_markdown(
+    logger: "logging.Logger",
+    notion: "client",
+    feats_data: object,
 ) -> list:
     from src.builds.children_md import (
         add_paragraph,
         add_section_heading,
         add_divider,
-        add_paragraph_with_mentions,
     )
     # == This is all of the building of the api call for
     # == the markdown body
@@ -162,18 +142,17 @@ def build_ability_scores_markdown(
 
     # == Adding header at the top
     # ==========
-    add_section_heading(
-        markdown_children, f"{ability_scores_data['full_name']}", level=1
+    add_section_heading(markdown_children, f"{feats_data['name']}", level=1)
+    min = ", ".join(
+        f"{feats_data['ability_score']['name']} {feats_data['minimum_score']}"
+        for feats_data in feats_data["prerequisites"]
+    )
+    add_paragraph(
+        markdown_children,
+        (f"Minimum Requirements - {min}"),
     )
     add_divider(markdown_children)
-    for desc in ability_scores_data["desc"]:
-        add_paragraph(markdown_children, desc)
-
-    if ability_scores_data["skills"]:
-        add_section_heading(markdown_children, "Skills", level=2)
-        add_divider(markdown_children)
-        for abil in ability_scores_data["skills"]:
-            text_string = f"{abil['name']}"
-            add_paragraph(markdown_children, text_string)
+    for d in feats_data["desc"]:
+        add_paragraph(markdown_children, d)
 
     return markdown_children

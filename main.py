@@ -35,6 +35,7 @@ SUPPORTED DATABASES:
     "magic-items",
     "spells",
     "backgrounds",
+    "feats",
 
 EXAMLPES:
 
@@ -67,6 +68,7 @@ from src.builds.proficiencies import build_proficiencies_database
 from src.builds.classes import build_classes_database
 from src.builds.races import build_races_database
 from src.builds.backgrounds import build_backgrounds_database
+from src.builds.feats import build_feats_database
 import logging
 import argparse
 
@@ -96,6 +98,7 @@ VALID_BUILD_SET_2 = [
     "magic-items",
     "spells",
     "backgrounds",
+    "feats",
 ]
 
 
@@ -122,6 +125,7 @@ def main(args: argparse.Namespace) -> None:
             "5e-SRD-Weapon-Properties.json",
         ),
         "backgrounds": (build_backgrounds_database, "5e-SRD-Backgrounds.json"),
+        "feats": (build_feats_database, "5e-SRD-Feats.json"),
         "magic-schools": (build_magic_schools_database, "5e-SRD-Magic-Schools.json"),
         "rules": (build_rules_database, "5e-SRD-Rule-Sections.json"),
         "languages": (build_languages_database, "5e-SRD-Languages.json"),

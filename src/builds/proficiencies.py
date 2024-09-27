@@ -175,9 +175,7 @@ def build_proficiencies_markdown(
     logger: "logging.Logger", notion: "client", proficiencies_data: object
 ) -> list:
     from src.builds.children_md import (
-        add_paragraph,
         add_section_heading,
-        add_divider,
         add_table,
     )
     # == This is all of the building of the api call for
@@ -189,13 +187,13 @@ def build_proficiencies_markdown(
     markdown_children = []
 
     add_section_heading(markdown_children, f"{proficiencies_data['name']}", level=1)
-    add_divider(markdown_children)
+
     if proficiencies_data["classes"]:
         header = []
         header.extend(clas["name"] for clas in proficiencies_data["classes"])
         # == Adding header at the tocp
         # ==========
-        add_section_heading(markdown_children, "Proficient Classes", level=2)
+        add_section_heading(markdown_children, "Proficient Classes", level=3)
         add_table(markdown_children, header)
 
     if proficiencies_data["races"]:
@@ -203,7 +201,7 @@ def build_proficiencies_markdown(
         header.extend(clas["name"] for clas in proficiencies_data["races"])
         # == Adding header at the tocp
         # ==========
-        add_section_heading(markdown_children, "Proficient races", level=2)
+        add_section_heading(markdown_children, "Proficient races", level=3)
         add_table(markdown_children, header)
 
     return markdown_children

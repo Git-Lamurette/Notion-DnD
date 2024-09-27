@@ -308,11 +308,8 @@ def build_spells_markdown(
 
     # == Adding header at the top
     # ==========
-    add_section_heading(
-        markdown_children,
-        f"{spell.name}",
-        level=1,
-    )
+    add_section_heading(markdown_children, f"{spell.name}", level=1)
+    add_divider(markdown_children)
 
     stats_table_headers = [
         "Level",

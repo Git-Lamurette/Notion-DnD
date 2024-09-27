@@ -260,6 +260,7 @@ def build_weapon_markdown(
     # == Adding header at the top
     # ==========
     add_section_heading(markdown_children, f"{equipment.name}", level=1)
+    add_divider(markdown_children)
 
     headers = [
         f"Type: {equipment.category_range}",
@@ -267,12 +268,10 @@ def build_weapon_markdown(
         f"Weight: {equipment.get_weight()}",
     ]
     add_table(markdown_children, headers)
-    add_divider(markdown_children)
 
     if equipment.special:
         for special in equipment.special:
             add_paragraph(markdown_children, special)
-        add_divider(markdown_children)
 
     # == Attributes
     # ==========

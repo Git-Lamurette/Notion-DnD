@@ -248,9 +248,6 @@ def build_races_markdown(
         add_section_heading,
         add_table,
         add_divider,
-        add_paragraph_with_mentions,
-        add_expandable_toggle,
-        add_bulleted_list,
     )
     # == This is all of the building of the api call for
     # == the markdown body
