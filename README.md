@@ -19,6 +19,7 @@ This is a project I am working on in my free time as a way to learn python, seei
 
 Developed with python 3.12.6, may work with other versions I have not tested it myself.
 - Python 3.12.6
+- Notion Client 2.2.1
 - Required Python packages (listed in `requirements.txt`)
 
 ### Installation
