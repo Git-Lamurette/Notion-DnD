@@ -3,7 +3,7 @@
 
 A notion integration utility to build Notion databases and Markdown files.
 
-This is a project I am working on in my free time as a way to learn python. Welcoming any 
+This is a project I am working on in my free time as a way to learn python, seeing as there was no solid solution for DND content I though to share it with everyone. I welcome any feedback or contributions!
 
 ## Roadmap
 ---
