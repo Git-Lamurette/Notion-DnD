@@ -1,12 +1,10 @@
 # Notion-DnD
----
 
 A notion integration utility to build Notion databases and Markdown files.
 
 This is a project I am working on in my free time as a way to learn python, seeing as there was no solid solution for DND content I though to share it with everyone. I welcome any feedback or contributions!
 
 ## Roadmap
----
 
 - [x] Build Notion databases from DND 5e API JSON files
 - [x] Generate Markdown files for each respective DnD resource
@@ -16,7 +14,7 @@ This is a project I am working on in my free time as a way to learn python, seei
 - [ ] Provide AI API's integration to dynamically create pages based on AI requests
 
 ## Getting Started
----
+
 ### Prerequisites
 
 Developed with python 3.12.6, may work with other versions I have not tested it myself.
@@ -24,7 +22,6 @@ Developed with python 3.12.6, may work with other versions I have not tested it 
 - Required Python packages (listed in `requirements.txt`)
 
 ### Installation
----
 
 #### Clone the repository:
 ```sh
@@ -56,12 +53,10 @@ main.py --build creatures weapons --database_id ***************** --auth_key sec
 ```
 
 ## License
----
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. The underlying material is released using the Open Gaming License Version 1.0a
 
 ## Contributing
----
 All contributions are welcome!
 
 1. Just fork this repository
@@ -69,6 +64,5 @@ All contributions are welcome!
 3. Push up any changes to your branch, and open a pull request. 
 
 ## Acknowledgments
----
 - [notion-sdk-py](https://github.com/ramnes/notion-sdk-py): For its wonderful library making this project a breeze.
 - [5e Bits](https://github.com/5e-bits) and their [5e-database](https://github.com/5e-bits/5e-database) repo for providing the json data.
