@@ -4,6 +4,8 @@ A notion integration utility to build Notion databases and Markdown files.
 
 This is a project I am working on in my free time as a way to learn python, seeing as there was no solid solution for D&D content I though to share it with everyone. I welcome any feedback or contributions!
 
+If you do not wish to build your own database or to configure anything you can directly copy the [Notion Database Here](https://dnd-srd.notion.site/)
+
 ## Roadmap
 
 - [x] Build Notion databases from DND 5e API JSON files
