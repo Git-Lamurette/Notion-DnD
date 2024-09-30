@@ -119,7 +119,7 @@ def main(args: argparse.Namespace) -> None:
 
     # == Define a mapping of database names to their corresponding build functions and JSON files
     # == Some of these are order dependent for example, you need to build the weapon properties before the weapons
-    database_builders = {
+    database_dict = {
         "weapon-properties": (
             build_weapon_properties_database,
             "5e-SRD-Weapon-Properties.json",
@@ -145,17 +145,17 @@ def main(args: argparse.Namespace) -> None:
         "spells": (build_spells_database, "5e-SRD-Spells.json"),
     }
 
-    # == Iterate over the database_builders dict and call the corresponding function to build the database
+    # == Iterate over the database_dict dict and call the corresponding function to build the database
     for item in args.build:
         item_lower = item.lower()
         if item_lower == "all":
-            for builder, json_file in database_builders.values():
+            for builder, json_file in database_dict.values():
                 log_db_build(logger, item, json_file)
                 builder(logger, notion, DATA_DIRECTORY, json_file, args)
             break
         # == Builds each item in the database args
-        if item_lower in database_builders:
-            builder, json_file = database_builders[item_lower]
+        if item_lower in database_dict:
+            builder, json_file = database_dict[item_lower]
             log_db_build(logger, item, json_file)
             builder(logger, notion, DATA_DIRECTORY, json_file, args)
 

@@ -1,22 +1,16 @@
 import logging
 import pprint
 
-
-def get_first_level_keys(data):
-    if isinstance(data, dict):
-        return set(data.keys())
-    return set()
-
-
 def get_keys(
-    logger: logging.Logger, DATA_DIRECTORY: str, json_file: str, key_val: str
+    logger: logging.Logger, DATA_DIRECTORY: str, json_file: list, key_val: str
 ) -> None:
-    """Getting the unique keys and values from the JSON file
+    """Getting the unique keys and values from the JSON file.
+    Used for when I was evaluating the JSON files to determine the unique keys and values.
+    This was useful for building the database schemas in Notion.
 
     Args:
-        logger (logging.Logger): Logging object
         DATA_DIRECTORY (str): Path to the json you are parsing
-        json_file (str): JSON file you are parsing
+        json_file (list): JSON file you are parsing
         key_val (str): Key value you want to get the unique keys and values from
 
     """

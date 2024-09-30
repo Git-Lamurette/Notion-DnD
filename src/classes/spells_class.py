@@ -27,6 +27,11 @@ class _spell:
     url: Optional[str] = None
 
     def get_attack_spell_save(self) -> str:
+        """Get the attack spell save for the spell.
+        
+        Returns:
+            str: Attack spell save for the spell
+        """
         if self.attack_type:
             return self.attack_type.capitalize()
         if self.dc:

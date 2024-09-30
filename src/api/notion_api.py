@@ -4,63 +4,24 @@ from time import sleep
 import logging
 from notion_client import Client
 
-'''
-def query_notion(
-    logger: logging.Logger,
-    notion: Client,
-    query: str,
-    filter: dict = None,
-    sort: dict = None,
-    page_size: int = 100,
-    exact_case: bool = False,
-) -> list:
-    """Query the Notion API and return results.
-    Example:
-        results = query_notion(logger, notion, query, filter, sort, exact_case=True)
-    """
-    results = []
-    start_cursor = None
-    while True:
-        try:
-            response = notion.search(
-                query=query,
-                filter=filter,
-                sort=sort,
-                start_cursor=start_cursor,
-                page_size=page_size,
-            )
-            results.extend(response.get("results", []))
-            start_cursor = response.get("next_cursor")
-
-            if not start_cursor:
-                break
-
-        except Exception as e:
-            if logger:
-                logger.error(f"Error querying Notion API: {e}")
-            else:
-                print(f"Error querying Notion API: {e}")
-            break
-
-    if exact_case:
-        # Use a generator expression to find the first result that matches the exact case
-        result = next(
-            (result for result in results if result.get("title", "").strip() == query),
-            None,
-        )
-        return [result] if result else []
-
-    return results
-
-'''
-
 
 def create_page_under_page(
     logger: logging.Logger,
     notion: Client,
     database_id: str,
-    title,
-):
+    title: str,
+) -> str:
+    """This function creates a page under a page in Notion.
+
+    Args:
+        logger (logging.Logger): Logging object
+        notion (client): Notion Client object
+        database_id (str): Database ID
+        title (str): Title of the page
+    
+    Returns:
+        str: ID of the page created
+    """
     try:
         response = notion.pages.create(
             parent={"page_id": database_id},
@@ -80,7 +41,7 @@ def create_page(
     logger: logging.Logger,
     notion: Client,
     database_id: str,
-    markdown_properties: dict,
+    markdown_properties: list,
     children_properties: list,
 ) -> None:
     """This function creates a page in Notion. It is used to create the pages for the creatures and equipment.
@@ -130,7 +91,9 @@ def create_database(
         database_id (str): Database ID
         database_name (list): Name of the database
         database_properties (list): Properties for the database
-
+    
+    Returns:
+        str: ID of the database created
     """
 
     try:

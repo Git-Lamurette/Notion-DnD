@@ -46,6 +46,11 @@ class _Creature:
     # == Speed
     # ==========
     def get_speed(self) -> str:
+        """Parse the speed dictionary into a string.
+        
+        Returns:
+            str: Parsed speed dictionary
+        """
         parsed_speed = ", ".join(
             f"{movement.capitalize()}: {distance}"
             for movement, distance in self.speed.items()
@@ -55,6 +60,11 @@ class _Creature:
     # == Armor parsing
     # ==========
     def get_armor(self) -> str:
+        """Parse the armor dictionary into a string.
+        
+        Returns:
+            str: Parsed armor dictionary
+        """
         parsed_armor = []
         for armor in self.armor_class:
             if "spell" in armor:
@@ -79,6 +89,11 @@ class _Creature:
     # == Proficencies
     # ==========
     def get_proficencies(self) -> tuple[str, str]:
+        """Parse the proficiencies dictionary into a string.
+        
+        Returns:
+            tuple[str, str]: Parsed proficiencies dictionary
+        """
         saving_prof = []
         skill_prof = []
         for x in self.proficiencies:
@@ -101,6 +116,11 @@ class _Creature:
     # == Damage Resistances
     # ==========
     def get_damage_resistances(self) -> str:
+        """Parse the damage resistances dictionary into a string.
+        
+        Returns:
+            str: Parsed damage resistances dictionary
+        """
         parsed_dam_res = []
         if parsed_dam_res := self.damage_resistances:
             parsed_dam_res = " , ".join([x.capitalize() for x in parsed_dam_res])
@@ -109,6 +129,11 @@ class _Creature:
     # == Damage Vulnerabilities
     # ==========
     def get_damage_vulnerabilities(self) -> str:
+        """Parse the damage vulnerabilities dictionary into a string.
+        
+        Returns:
+            str: Parsed damage vulnerabilities dictionary
+        """
         parsed_dam_vul = []
         if parsed_dam_vul := self.damage_vulnerabilities:
             parsed_dam_vul = " , ".join([x.capitalize() for x in parsed_dam_vul])
@@ -116,7 +141,12 @@ class _Creature:
 
     # == Damage Immunities
     # ==========
-    def get_damage_immunities(self) -> list:
+    def get_damage_immunities(self) -> str:
+        """Parse the damage immunities dictionary into a string.
+        
+        Returns:
+            str: Parsed damage immunities dictionary
+        """
         parsed_dam_imun = []
         if parsed_dam_imun := self.damage_immunities:
             parsed_dam_imun = " , ".join([x.capitalize() for x in parsed_dam_imun])
@@ -125,6 +155,11 @@ class _Creature:
     # == Condition Immunities
     # ===============
     def get_condition_immunities(self) -> str:
+        """Parse the condition immunities dictionary into a string.
+        
+        Returns:
+            str: Parsed condition immunities dictionary
+        """
         parsed_con_imun = []
         if parsed_con_imun := [x["name"] for x in self.condition_immunities]:
             parsed_con_imun = " , ".join(parsed_con_imun)
@@ -133,6 +168,11 @@ class _Creature:
     # == Senses
     # ===============
     def get_senses(self) -> str:
+        """Parse the senses dictionary into a string.
+        
+        Returns:
+            str: Parsed senses dictionary
+        """
         parsed_senses = [
             f"{key.replace("_", " ")}: {value}" for key, value in self.senses.items()
         ]
@@ -142,6 +182,11 @@ class _Creature:
     # == Special Abilities
     # ===============
     def get_special_abilities(self) -> list[str]:
+        """Parse the special abilities dictionary into a string.
+        
+        Returns:
+            list[str]: Parsed special abilities dictionary
+        """
         special_ability = []
         if self.special_abilities:
             for x in self.special_abilities:
@@ -154,6 +199,11 @@ class _Creature:
     # == Spellcasting Abilitites
     # ===============
     def get_spellcasting(self) -> list[str]:
+        """Parse the spellcasting abilities dictionary into a string.
+        
+        Returns:
+            list[str]: Parsed spellcasting abilities dictionary
+        """
         spell_ability = []
         for x in self.special_abilities or []:
             if x["name"].startswith("Spellcasting"):
@@ -163,6 +213,11 @@ class _Creature:
     # == Actions
     # ===============
     def get_actions(self) -> list[str]:
+        """Parse the actions dictionary into a string.
+        
+        Returns:
+            list[str]: Parsed actions dictionary
+        """
         actions = []
         if self.actions:
             for x in self.actions:
@@ -172,6 +227,11 @@ class _Creature:
     # == Legendary Actions
     # ===============
     def get_legendary_actions(self) -> list[str]:
+        """Parse the legendary actions dictionary into a string.
+        
+        Returns:
+            list[str]: Parsed legendary actions dictionary
+        """
         legendary_action = []
         if self.legendary_actions:
             for x in self.legendary_actions:

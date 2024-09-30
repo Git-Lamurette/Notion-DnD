@@ -14,5 +14,10 @@ class _magic_item:
     variant: Optional[bool] = None
     variants: Optional[List[dict]] = None
 
-    def get_variants(self):
+    def get_variants(self) -> List[str]:
+        """Get the variants of the magic item.
+        
+        Returns:
+            List[str]: Variants of the magic item
+        """
         return [x["name"] for x in self.variants]
