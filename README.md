@@ -14,6 +14,7 @@ If you do not wish to build your own database or to configure anything you can d
 - [ ] Improve the markdown formatting
 - [ ] Add more dynamic linking
 - [ ] Provide AI API's integration to dynamically create pages based on AI requests
+- [ ] D&D Beyond character import
 
 ## Getting Started
 
